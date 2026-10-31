@@ -50,9 +50,9 @@ fails and names the test. Adding a `ProjectReference` from Core to a
 
 ## 5. Release dry run (on the 001 PR)
 
-`release.yml` runs because the PR adds it. Expected: all four executables are built and
-architecture-checked, `linux-x64` and `osx-arm64` pass smoke, the multi-arch image builds
-and the amd64 image passes smoke, and `publish` is skipped.
+`release.yml` runs because the PR adds it. Expected: all four executables are built,
+architecture-checked and pass smoke on their native runners, the multi-arch image builds,
+both the amd64 and arm64 images pass smoke, and `publish` is skipped.
 
 ## 6. First release (after the maintainer merges)
 

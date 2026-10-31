@@ -130,9 +130,11 @@ alternatives considered.
     `Version` override, so `Hoard.Core` keeps its own `<Version>` and `--skip-duplicate`
     skips it when unchanged (FR-015).
   - The output executable is renamed `hoard-<version>-<rid>[.exe]`.
-  - `linux-x64`, `linux-arm64` and `win-x64` are cross-published on `ubuntu-latest`.
-    `osx-arm64` is published on `macos-latest`, so the apphost carries the ad-hoc
-    signature Apple Silicon requires.
+  - Each RID is published, architecture-checked and smoke-tested on its own native
+    standard runner: `linux-x64` on `ubuntu-latest`, `linux-arm64` on `ubuntu-24.04-arm`,
+    `win-x64` on `windows-latest`, `osx-arm64` on `macos-latest` (so the apphost carries
+    the ad-hoc signature Apple Silicon requires). Standard runners are free and unlimited
+    on public repositories (R14).
 - **Rationale:** a single file is the easiest thing to download and checksum. Trimming
   and AOT have known ASP.NET Core caveats and no benefit yet. Building on macOS avoids
   relying on cross-host signing behavior.
@@ -140,11 +142,12 @@ alternatives considered.
   - Archives (`.tar.gz`/`.zip`): they keep the exec bit, but users would then check
     archive checksums rather than executable checksums (US2 scenario 5). Raw executables
     are kept, and the docs give `chmod +x` and the macOS quarantine removal.
-  - Arm64 runners: rejected because the repo is private on a free plan and standard
-    arm64 hosted runners are not assumed available.
+  - Cross-publishing everything on `ubuntu-latest`: cheaper on a private repo, but
+    three of four executables would ship never having run. Superseded once the repo
+    went public (R14).
 - **Architecture check:** every published file is inspected with `file`. The job fails
   unless it reports ELF x86-64, ELF aarch64, PE32+ x86-64 or Mach-O arm64 respectively.
-  This catches "wrong architecture" on platforms that are not smoke-run.
+  It catches a wrong-architecture build before the smoke test's less specific failure.
 
 ## R7. Container image
 
@@ -160,8 +163,9 @@ alternatives considered.
   - The verify stage builds it **once** with `docker buildx --platform
     linux/amd64,linux/arm64 --output type=oci,dest=hoard.oci.tar`. No QEMU is needed
     because nothing executes during the build.
-  - The archive is a workflow artifact. Smoke tests load the amd64 variant from it
-    (`skopeo copy --override-arch amd64 oci-archive:… docker-daemon:…`), and `publish`
+  - The archive is a workflow artifact. Smoke tests load each architecture's variant
+    from it on a native runner (`skopeo copy --override-arch <arch> oci-archive:…
+    docker-daemon:…`), and `publish`
     pushes that same archive (`skopeo copy --all oci-archive:… docker://…`).
 - **Rationale:** the released image is byte-for-byte the one that was smoke-tested,
   containing the architecture-checked binaries. The chiseled image is small, non-root
@@ -183,7 +187,10 @@ alternatives considered.
       (SC-004). It asserts `200 Healthy` and that `/anything-else` is `404`.
     - Lists the process's listeners with `lsof -nP -a -p $PID -iTCP -sTCP:LISTEN`. It
       fails if there are none, or if any address is not `127.0.0.1` or `[::1]`.
-    - Runs on `linux-x64` (PR and release) and `osx-arm64` (release).
+    - Runs on `linux-x64` (PR and release) and on `linux-arm64`, `osx-arm64` and
+      `win-x64` (release), each on its native runner. On Windows the script runs under
+      Git Bash; it maps `$!` to the Windows PID via `/proc/<pid>/winpid` and lists
+      listeners with PowerShell `Get-NetTCPConnection -State Listen -OwningProcess`.
   - `eng/smoke/smoke-container.sh <image>`:
     - Asserts the image's configured user is not root. Runs the container with
       `--read-only --cap-drop ALL --security-opt no-new-privileges`, keeping the base
@@ -198,7 +205,9 @@ alternatives considered.
       get *connection refused* (not a timeout) on `<container-ip>:8484`.
     - Positive control: the same probe must reach a helper listener started on that
       bridge. This shows the probe path works, so a refusal is meaningful.
-    - Runs on amd64.
+    - Runs on amd64 (`ubuntu-latest`, PR and release) and arm64 (`ubuntu-24.04-arm`,
+      release), each loading its own variant from the same OCI archive. Helper images
+      are pinned by multi-arch index digest.
 - **Rationale:** the chiseled image has no shell or tools, so inspection happens from a
   helper that shares its network namespace. The socket table is the authoritative list
   of listeners. The bridge probe and its control prove the outside-in view.
@@ -318,8 +327,9 @@ alternatives considered.
     values pass through `env:`.
 - **Rationale:** least privilege and resistance to injection. `GITHUB_TOKEN` is the only
   credential, and no personal secrets are introduced (spec assumption).
-- **Limitation:** the repository is private on a free plan, so GitHub branch protection
-  and rulesets are unavailable. The gate is the PR status check plus the rule in
+- **Limitation:** until the repository is public, GitHub branch protection and rulesets
+  are unavailable on the free plan (enabling them afterwards is a repository setting
+  outside this spec). The gate is the PR status check plus the rule in
   `docs/RELEASING.md` that "a PR merges only when CI is green". SC-001 (a status
   reported on every PR) is unaffected.
 
@@ -333,7 +343,8 @@ alternatives considered.
 - **Caveat:** GitHub Packages' NuGet registry requires authentication even for public
   packages, so `Hoard.Core` consumers need a token with `read:packages`. The docs say so;
   the image and release assets download anonymously.
-- **Follow-up:** a public repository makes branch protection (R13) and free arm64/macOS
-  hosted runners (R6) available. Both are revisited before the MVP release, not in this
-  spec.
+- **Consequences:** standard hosted runners become free for every platform, so R6/R8
+  smoke-test every artifact natively. The repository must be public before the first
+  push of `release.yml` (implement), or the macOS/arm64 dry-run minutes are billed.
+  Branch protection becomes available as a repository setting (R13).
 - **Rationale:** the backlog outcome promises a downloadable alpha for early users.

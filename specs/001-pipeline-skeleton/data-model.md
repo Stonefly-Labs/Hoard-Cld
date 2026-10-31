@@ -29,7 +29,7 @@ named here so the workflows, scripts and docs use them consistently.
 guard ──► verify (build, test, pack) ──► binaries[rid] (publish, arch check, smoke*, checksum)
                                                   │
                                                   ▼
-                                    container (build multi-arch, smoke amd64)
+                                    container (build multi-arch, smoke amd64 + arm64)
                                                   │
                          all succeeded? ──no──► run fails, nothing published
                                                   │ yes
@@ -37,5 +37,4 @@ guard ──► verify (build, test, pack) ──► binaries[rid] (publish, arc
                             publish: packages → image → GitHub release
 ```
 
-\* Smoke tests run for `linux-x64` and `osx-arm64`. The other executables get the
-architecture check only.
+\* Every executable is architecture-checked and smoke-tested on its native runner.

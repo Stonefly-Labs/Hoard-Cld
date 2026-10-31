@@ -118,6 +118,7 @@ locally against a `linux-x64` publish and an amd64 image (quickstart §3).
     - (a) env `ASPNETCORE_URLS=http://0.0.0.0:8080`, `ASPNETCORE_HTTP_PORTS=8081`, `ASPNETCORE_HTTPS_PORTS=8443`, `DOTNET_URLS=http://0.0.0.0:8082`, `ASPNETCORE_PREFERHOSTINGURLS=true`, `Kestrel__Endpoints__H__Url=http://0.0.0.0:8485`
     - (b) command-line `--urls http://0.0.0.0:8086`
     - (c) an `appsettings.json` placed next to a copy of the executable in a temp dir, declaring a `Kestrel:Endpoints` entry on `0.0.0.0:8487`
+  - **Windows** (runs under Git Bash on `windows-latest`): maps `$!` to the Windows PID via `/proc/$PID/winpid`, lists listeners with `powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -OwningProcess <winpid>"`, and accepts only `127.0.0.1`/`::1`. Linux and macOS use `lsof`.
   - Always kills the process and removes temp files via `trap`. Prints the failing assertion and the listener table on failure (R8).
 - [ ] T021 [P] [US3] Create `deploy/docker/Dockerfile`:
   - `FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled@sha256:<digest>`, using the current published digest
@@ -126,7 +127,7 @@ locally against a `linux-x64` publish and an amd64 image (quickstart §3).
   - no `RUN` steps; leave the base image's `ASPNETCORE_HTTP_PORTS` untouched so the smoke test proves the override (R7, security CHK018)
 - [ ] T022 [P] [US3] Write `eng/smoke/smoke-container.sh <image>`:
   - **Image checks**: asserts the image's `Config.User` is set and is not `root`/`0`. Runs the container detached with `--read-only --cap-drop ALL --security-opt no-new-privileges`, keeping base env.
-  - **Inside view**: from a digest-pinned helper (busybox/curl) using `--network container:<id>`, polls `/health` for at most 30 s and asserts `200 Healthy` and the `404`. It reads `/proc/net/tcp` and `/proc/net/tcp6` and fails if there is no listening socket (state `0A`) or any is on a non-loopback address.
+  - **Inside view**: from a helper (busybox/curl) pinned by **multi-arch index digest** so the same script runs on amd64 and arm64 runners using `--network container:<id>`, polls `/health` for at most 30 s and asserts `200 Healthy` and the `404`. It reads `/proc/net/tcp` and `/proc/net/tcp6` and fails if there is no listening socket (state `0A`) or any is on a non-loopback address.
   - **Outside view**: a probe container on the same bridge must get *connection refused* (not a timeout) on `<container-ip>:8484`. A positive control first shows the probe reaches a helper listener on that bridge.
   - **Hostile run**: repeats everything with the hostile env from T020(a).
   - **Cleanup**: removes all containers and the network via `trap` (R8, security CHK009).
@@ -198,7 +199,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
 - [ ] T032 [US2] Add the `<!-- release-status:start -->`/`<!-- release-status:end -->` section to `README.md`, replacing "Status: planning". It contains:
   - **Working**: a health-only host on `127.0.0.1:8484`; container and self-contained executables; loopback only; the container is not reachable from the host yet (until spec 002)
   - **Planned**: everything else, in one line per area
-  - **Known limitation**: `win-x64`, `linux-arm64` and the arm64 image are built and architecture-checked but never run in CI
+  - every executable and both image architectures are smoke-tested on native runners before release
 
   Follows FR-016, R11, spec Assumptions and Clarifications
 - [ ] T033 [US2] Create `.github/workflows/release.yml`, part 1 — triggers and guard:
@@ -210,15 +211,16 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Verify job condition**: `!cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped')` (R9, R10, R13, security CHK011)
 - [ ] T034 [US2] Add to `.github/workflows/release.yml`, part 2 — verify jobs:
   - **`verify`**: restore, build, `dotnet test Hoard.slnx`, then `dotnet pack src/Hoard.Core -c Release -o out/packages` **without** any `Version` override. Uploads the nupkg artifact.
-  - **`binaries`**: a matrix over `linux-x64`, `linux-arm64` and `win-x64` on `ubuntu-latest`, and `osx-arm64` on `macos-latest`.
+  - **`binaries`**: a matrix pairing each RID with its native standard runner: `linux-x64` → `ubuntu-latest`, `linux-arm64` → `ubuntu-24.04-arm`, `win-x64` → `windows-latest`, `osx-arm64` → `macos-latest`. Every step uses `shell: bash`.
     - Runs `dotnet publish src/Hoard.Host -c Release -r <rid> --self-contained -p:PublishSingleFile=true -p:DebugType=none -p:Version=<version>` and renames the output to `hoard-<version>-<rid>[.exe]`.
     - Architecture check with `file`, failing unless the output is ELF x86-64 / ELF aarch64 / PE32+ x86-64 / Mach-O arm64 respectively.
-    - Runs `eng/smoke/smoke-binary.sh` for `linux-x64` and `osx-arm64`, then uploads the executable as an artifact.
-  - **`container`**: `needs: binaries`. Downloads the linux executables, runs `docker buildx build --platform linux/amd64,linux/arm64 --output type=oci,dest=hoard.oci.tar`, loads amd64 via `skopeo copy --override-arch amd64 oci-archive:hoard.oci.tar docker-daemon:hoard:<version>`, runs `eng/smoke/smoke-container.sh`, and uploads `hoard.oci.tar`.
+    - Runs `eng/smoke/smoke-binary.sh` on **every** RID, then uploads the executable as an artifact. `fail-fast: false`, so one platform's failure still reports the others (spec edge case).
+  - **`container`**: `needs: binaries`, on `ubuntu-latest`. Downloads the linux executables, runs `docker buildx build --platform linux/amd64,linux/arm64 --output type=oci,dest=hoard.oci.tar`, and uploads `hoard.oci.tar`.
+  - **`container-smoke`**: `needs: container`, a matrix `amd64` → `ubuntu-latest`, `arm64` → `ubuntu-24.04-arm`. Downloads `hoard.oci.tar`, installs `skopeo` if the runner image lacks it, loads its variant via `skopeo copy --override-arch <arch> oci-archive:hoard.oci.tar docker-daemon:hoard:<version>`, and runs `eng/smoke/smoke-container.sh`.
 
   Follows R6, R7, FR-012–FR-014
 - [ ] T035 [US2] Add to `.github/workflows/release.yml`, part 3 — the `publish` job:
-  - **Needs and condition**: `needs: [guard, verify, binaries, container]`; `if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && needs.guard.result == 'success' && needs.verify.result == 'success' && needs.binaries.result == 'success' && needs.container.result == 'success'`.
+  - **Needs and condition**: `needs: [guard, verify, binaries, container, container-smoke]`; `if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && needs.guard.result == 'success' && needs.verify.result == 'success' && needs.binaries.result == 'success' && needs.container.result == 'success' && needs.container-smoke.result == 'success'`.
   - **Permissions**: `contents: write` and `packages: write` on this job only.
   - **Steps, in order**:
     1. `sha256sum hoard-* > SHA256SUMS`.
@@ -237,7 +239,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - no `--clobber`, no `latest`, no `git tag`/`git push`
 
   Follows R13, FR-017, FR-018, security CHK006/CHK011
-- [ ] T037 [US2] Push to PR #4 and confirm the `release.yml` dry run: all four executables are built and architecture-checked, `linux-x64` and `osx-arm64` pass smoke, the multi-arch OCI archive builds and amd64 passes smoke, and `publish` is skipped. Report the actual `gh pr checks` result (quickstart §5)
+- [ ] T037 [US2] **Precondition: the repository is public** (otherwise the macOS/arm64 dry-run jobs bill private minutes; stop and ask the maintainer if not). Push to PR #4 and confirm the `release.yml` dry run: all four executables are built, architecture-checked and pass smoke on their native runners (including the Windows Git Bash path), the multi-arch OCI archive builds, amd64 and arm64 images pass smoke, and `publish` is skipped. Report the actual `gh pr checks` result (quickstart §5)
 
 **Checkpoint**: the dry run is green on PR #4. The real publish is verified by the `release` step after merge.
 
@@ -260,7 +262,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Re-runs**: skip what exists and upload only missing assets. After a partial publish (e.g. package pushed, image push failed), re-run the same run. If assets were partly uploaded and `SHA256SUMS` might not match, release a new version, never retag (gap fold-in, release CHK004/CHK006).
   - **Package versions**: bump `<Version>` in a `Hoard.*` project file whenever a spec changes that package. An unchanged version is silently skipped by `--skip-duplicate`, so reviewers check the bump (gap fold-in, release CHK017).
   - **One-time manual settings before `v0.0.1-alpha`**: make the repository public. After the first publish, set the `hoard` GHCR package and the `Hoard.Core` package to public, and confirm `docker pull ghcr.io/stonefly-labs/hoard:0.0.1-alpha` works anonymously. Consuming `Hoard.Core` from GitHub Packages still needs a token with `read:packages`, even though the package is public (R14).
-  - **CI section**: correct it to what runs today (build, tests, architecture checks, smoke tests).
+  - **CI section**: correct it to what runs today: PRs run build, tests, architecture checks and `linux-x64`/amd64 smoke; releases (and PRs touching the pipeline) smoke every executable and both image architectures on native standard runners, which are free because the repository is public.
 - [ ] T040 [P] Update `docs/DEVELOPMENT.md`: replace "No application code exists yet" with prerequisites (.NET 10 SDK, Docker, bash, `lsof`), the build, test and smoke commands, and the two PR checks
 - [ ] T041 [P] Add a "Commands" section to `CLAUDE.md`: `dotnet build Hoard.slnx`, `dotnet test Hoard.slnx`, `eng/smoke/smoke-binary.sh <exe>` and `eng/smoke/smoke-container.sh <image>` (FR-019)
 - [ ] T042 [P] Update `specs/001-pipeline-skeleton/quickstart.md`:

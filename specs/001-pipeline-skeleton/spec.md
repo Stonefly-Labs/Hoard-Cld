@@ -15,7 +15,7 @@
 - Q: Should `Hoard.Core` be published as a package from this first release, or should no project be packable until a provider package needs it? → A: Publish `Hoard.Core` now, as an essentially empty package, so the package path is exercised from the first release.
 - Q: Who can download alpha artifacts? → A: Everyone. The maintainer makes the repository, the `ghcr.io/stonefly-labs/hoard` image and the `Hoard.Core` package public before the first release tag; the pipeline does not change visibility.
 - Q: What is `Hoard.Core`'s initial package version? → A: `0.0.1-alpha`; afterwards it changes independently of the release version, only when a spec changes `Hoard.Core`.
-- Q: Is shipping executables and an image that CI built but never ran (`win-x64`, `linux-arm64`, arm64 image) acceptable? → A: Yes for alphas, stated as a known limitation in the release notes; revisit before the MVP release.
+- Q: Is shipping executables and an image that CI built but never ran (`win-x64`, `linux-arm64`, arm64 image) acceptable? → A: No longer needed: with the repository public, standard GitHub-hosted runners are free for every platform, so the release smoke-tests every executable and both image architectures on native runners (superseded the earlier "accept for alphas" answer the same day).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -251,11 +251,9 @@ skip respectively.
   `release` step); the release process does not create tags.
 - Pushing to GHCR and GitHub Packages uses the repository's built-in CI credentials; no personal
   secrets are introduced.
-- The native-executable smoke test runs on at least one platform CI natively supports
-  (linux-x64; the release also smoke-runs osx-arm64); the other platforms are built and
-  checksummed but not smoke-tested in this spec.
-  Release notes state this as a known limitation; adding native smoke runs is revisited before
-  the MVP release.
+- The release smoke-tests all four executables and both image architectures, each on a native
+  GitHub-hosted runner (free for public repositories). The PR gate smoke-tests `linux-x64` and
+  the amd64 image; PRs that change the release pipeline also run the full release dry run.
 - Alpha artifacts are public: the maintainer makes the repository, image and package public
   before the first release tag (a manual, one-time setting outside the pipeline).
 - The container smoke test checks health from inside the container, since the host listens on

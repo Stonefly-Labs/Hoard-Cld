@@ -163,8 +163,7 @@ first spec that puts behavior in Core.
 - `README.md`:
   - Replace "Status: planning" with a marked `release-status` section. Working: the
     health-only host, container and executables, loopback only. Planned: the rest.
-    Alphas are public (R14). Known limitation: `win-x64`, `linux-arm64` and the arm64
-    image are built and architecture-checked but never run in CI.
+    Alphas are public (R14).
   - How to run the container and the executable, including `chmod +x` and macOS
     quarantine removal.
   - How to build and test.
@@ -182,8 +181,9 @@ first spec that puts behavior in Core.
 
 ## Risks and follow-ups
 
-- **No enforced required checks** (private repo on a free plan; R13). Merging only on
-  green CI follows `docs/RELEASING.md` and is the maintainer's discipline.
+- **No enforced required checks yet** (R13). Branch protection becomes available once the
+  repo is public; until the maintainer enables it, merging only on green CI follows
+  `docs/RELEASING.md`.
 - **Guard is not access control** (R9). Anyone with write access can tag a branch with
   an edited workflow. Write access is the trust boundary.
 - **GHCR first push.** The `hoard` package does not exist yet. The OCI `source` label
@@ -193,9 +193,10 @@ first spec that puts behavior in Core.
 - **Visibility** (R14): alphas are public. Making the repo, image and package public is
   a manual, one-time maintainer setting; the first release cannot be pulled anonymously
   until the image is set public after its first push.
-- **Unexecuted artifacts** (spec Clarifications): `win-x64`, `linux-arm64` and the arm64
-  image are never run in CI. Accepted for alphas; revisit before MVP
-  (a public repo makes native runners free).
+- **Repo must be public before implement pushes `release.yml`.** Otherwise the PR dry
+  run's macOS and arm64 jobs bill private-repo minutes.
+- **Windows smoke under Git Bash** (R8): PID mapping and PowerShell listener listing are
+  the least-proven part of the scripts; T023 exercises them on the PR dry run.
 - **Re-run checksum caveat** after a mid-upload failure (R10). The remedy is a new
   version.
 
