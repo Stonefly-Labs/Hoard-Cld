@@ -14,7 +14,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
 | 001 | Pipeline and solution skeleton | Complete | release | — | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | [v0.0.1-alpha](https://github.com/Stonefly-Labs/Hoard-Cld/releases/tag/v0.0.1-alpha) |
-| 002 | Host, configuration and deployment profiles | In progress | specify | clarify | feature/002-host-configuration-profiles | PR_LINK | — |
+| 002 | Host, configuration and deployment profiles | In progress | specify | clarify | feature/002-host-configuration-profiles | [#6](https://github.com/Stonefly-Labs/Hoard-Cld/pull/6) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
