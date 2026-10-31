@@ -334,3 +334,22 @@ Commit after each checkpoint, and push so CI runs on PR #4.
 - **T044.** On 86f4e0d: `dotnet build Hoard.slnx` 0 warnings; `dotnet test --solution Hoard.slnx`
   34/34 passed; both smoke scripts passed locally (macOS arm64); `gh pr checks 4` all green
   (`build-test`, `smoke`, and the `release.yml` dry run with `publish` skipped).
+
+---
+
+## Phase 8: Review round 1
+
+From the `review` step (docs-grounding-auditor, architecture-boundary-reviewer, security-reviewer).
+
+- [ ] T045 Pack the solution instead of naming `Hoard.Core` in `.github/workflows/release.yml` (`dotnet pack Hoard.slnx -c Release --no-build -o out/packages` after a Release build), so every packable `Hoard.*` project is published as FR-015 and `docs/RELEASING.md` say (MAJOR, grounding + architecture)
+- [ ] T046 Restore, build and test in `-c Release` in the release `verify` job so the architecture rules check the same Core configuration that is packed (architecture MINOR)
+- [ ] T047 In `eng/smoke/smoke-container.sh`, reject a user whose part before `:` is `root` or `0` (e.g. `root:root`) (security MINOR)
+- [ ] T048 Let `smoke()` in `eng/smoke/smoke-container.sh` pass arguments to the image and add a `hostile-command-line` run with `--urls http://0.0.0.0:8086` (security MINOR)
+- [ ] T049 Use the runner image's preinstalled `skopeo` in `release.yml` (`container-smoke`, `publish`) and fail if it is missing, instead of an unpinned `apt-get install` in the job holding the write token (security MINOR)
+- [ ] T050 Add `global.json`, `Directory.*.props` and `src/**/*.csproj` to the `release.yml` pull-request path filter and match the path list in `docs/RELEASING.md` (grounding MINOR)
+- [ ] T051 `docs/DEVELOPMENT.md`: say the binary smoke also tries a hostile `--urls` and `appsettings.json`; show a native-RID publish for `smoke-binary.sh` and a Linux-RID publish into `out/bin` for the image (grounding MINOR)
+- [ ] T052 `plan.md`: replace `dotnet test Hoard.slnx` with `dotnet test --solution Hoard.slnx` and add a one-line MTP deviation note pointing to the implementation notes (grounding MINOR)
+
+Deferred (no task; for the maintainer at `accept`): the first spec that adds behavior to `Hoard.Core`
+must bump its `<Version>` or `--skip-duplicate` will silently skip it; README's "Try the alpha"
+commands work only once `v0.0.1-alpha` is published and made public, checked at the `release` step.
