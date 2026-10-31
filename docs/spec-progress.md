@@ -12,7 +12,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
-| — | Project constitution | In progress | constitution | merge PR, then 001 specify | chore/project-constitution | (pending) | — |
+| — | Project constitution | In progress | constitution | merge PR, then 001 specify | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
