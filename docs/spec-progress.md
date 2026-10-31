@@ -13,7 +13,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
-| 001 | Pipeline and solution skeleton | In progress | tasks | analyze | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
+| 001 | Pipeline and solution skeleton | In progress | analyze | implement | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -23,6 +23,7 @@ Rows for specs are added when they start. Status values: `Not started`,
 
 | Date | Spec | Issue |
 |---|---|---|
+| 2026-10-31 | 001 | Pre-implement: repository is still PRIVATE. Plan/T037 require it public before implement pushes `release.yml` (macOS/arm64 dry-run runners). Maintainer action |
 
 ## Log
 
@@ -36,3 +37,4 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | checklist | checklists/security.md (21) + release.md (21), unchecked for maintainer; agent evaluation: 33 satisfied by spec/plan, 6 minor gaps to fold into tasks, 3 maintainer decisions (alpha visibility, Hoard.Core initial version, unexecuted win/arm64 artifacts) |
 | 2026-10-31 | 001 | tasks | tasks.md (44 tasks; test-first per story; 6 checklist gaps folded in). Maintainer decisions recorded in spec/plan/research: alphas public (manual visibility settings before v0.0.1-alpha), Hoard.Core starts at 0.0.1-alpha, unexecuted win-x64/linux-arm64/arm64-image accepted for alphas (revisit before MVP) |
 | 2026-10-31 | 001 | tasks | Amended: maintainer chose native hosted runners for every platform (repo public → standard runners free); release smoke-tests all 4 executables + amd64/arm64 images; superseded the "accept unexecuted artifacts" answer. Repo must be public before implement pushes release.yml |
+| 2026-10-31 | 001 | analyze | 0 CRITICAL, 0 HIGH, 4 MEDIUM, 4 LOW; 19/19 FRs covered by tasks, no constitution conflicts. No edits made. Open: repo still private (blocks T037) |
