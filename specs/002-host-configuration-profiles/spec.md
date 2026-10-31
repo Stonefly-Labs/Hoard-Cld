@@ -8,6 +8,16 @@
 
 **Input**: User description: "As a developer or operator, I want to start Hoard as a single process or container with a persistent data directory and get clear feedback about whether it started correctly. Configuration comes from command line over environment over file. Specify safe defaults: loopback only unless binding to other addresses is explicitly configured, with a clear warning that package reads are then anonymous; the official container image explicitly binds all interfaces inside the container so Docker port publishing works, and its documentation publishes the port to the host's loopback by default. Malformed or unknown options fail fast with actionable diagnostics and never fall back to insecure behavior. Distinguish liveness from readiness, define restart semantics and clean shutdown, and never log secrets. Include first-run, restart, invalid-config, explicit network-exposure and container scenarios. Out of scope for this spec: module registration or enable/disable machinery (no modules exist yet; it arrives with the first real module), storage and the management API."
 
+## Clarifications
+
+### Session 2026-10-31
+
+- Q: What format should Hoard's configuration file use, and should Hoard look for a file automatically when none is named? → A: JSON; Hoard reads `hoard.json` from the working directory if it exists, or a file named explicitly with `--config`.
+- Q: How should Hoard's options be named in environment variables, on the command line and in the file, and how are non-Hoard settings handled? → A: One mechanical mapping — file `{"listen": {"port": 8484}}` ↔ env `HOARD_LISTEN__PORT` ↔ CLI `--listen:port 8484`; every `HOARD_*` variable, every `--` argument and every file key must be a known option or startup fails; other environment variables are not Hoard's and are ignored.
+- Q: Where should the native executable keep its data by default when no data directory is configured? → A: `./data`, relative to the working directory, resolved to an absolute path at startup.
+- Q: What paths should the liveness and readiness endpoints use, and what happens to spec 001's `GET /health`? → A: `/health/live` and `/health/ready`; `/health` is removed and returns 404.
+- Q: How should a team deployment get TLS, given this spec ships plain HTTP? → A: Plain HTTP for MVP; team TLS comes from a TLS-terminating reverse proxy that the docs explain; native TLS is post-MVP. To be recorded in an ADR aligning Architecture §8 and Charter §7.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Actors: a **personal user** (runs Hoard on their own machine, as an executable or container), and
@@ -180,6 +190,8 @@ signal with a request in flight; restart and compare.
   rejected with the expected form, so the exposure decision never depends on name resolution.
 - `localhost` as the listen address means loopback only and gets no warning.
 - A configuration file that is valid but empty is equivalent to no file.
+- A malformed `hoard.json` found automatically in the working directory fails startup like a
+  named one; it is never skipped.
 - Options for later specs (storage, registries, management) are unknown in this spec and fail
   startup like any other unknown option; each later spec adds its options when it consumes them.
 - Two Hoard processes started with the same port: the second fails per US2 scenario 6. Two
@@ -199,15 +211,16 @@ signal with a request in flight; restart and compare.
   environment > configuration file (Product spec §10), and MUST show each effective option's
   source in the startup summary.
 - **FR-002**: The options in this spec are only those with a consumer here: the listen endpoint
-  (address and port; whether that is one option or two is left to FR-008 and the plan), the data
+  (address and port, named per FR-008), the data
   directory, and the configuration file location. No other Hoard
   option exists yet (Constitution V).
 - **FR-003**: Only Hoard's own options MAY change the listener. Framework-level settings from any
   source (e.g. web-framework URL or endpoint variables) MUST NOT add, widen or change a listener,
   preserving spec 001's guarantee.
-- **FR-004**: Unknown Hoard options, in any of the three sources, MUST fail startup. What marks
-  an environment variable, argument or file key as a Hoard option, and how non-Hoard keys (e.g.
-  framework logging settings) are treated, is part of the FR-008 decision.
+- **FR-004**: Unknown Hoard options MUST fail startup: any `HOARD_*` environment variable, any
+  `--` command-line argument and any configuration file key that is not an option defined in this
+  spec. Environment variables without the `HOARD_` prefix are not Hoard options and are ignored;
+  per FR-003 they can never change the listener.
 - **FR-005**: Malformed values, a malformed configuration file, or an explicitly named but missing
   configuration file MUST fail startup.
 - **FR-006**: Every startup failure MUST exit with a non-zero code before opening any port, and
@@ -215,11 +228,15 @@ signal with a request in flight; restart and compare.
   fix, in plain language rather than only a stack trace.
 - **FR-007**: Hoard MUST NOT fall back to a different listen address, port or data directory when
   the configured one is invalid or unusable (Architecture §5 step 4).
-- **FR-008**: The configuration file's format and default location are [NEEDS CLARIFICATION:
-  which format (Product spec §10 sketches YAML "illustrative, not final"); is there a default
-  file Hoard looks for when none is named, or is a file only read when named explicitly; and what
-  prefix or namespace identifies Hoard's options in the environment, on the command line and in
-  the file?]
+- **FR-008**: The configuration file is JSON. When no file is named, Hoard reads `hoard.json`
+  from the working directory if it exists and runs without a file if it does not. A file named
+  explicitly (`--config <path>`) replaces that lookup and MUST exist (FR-005). An automatically
+  found `hoard.json` is validated exactly like a named one, and the startup summary names the file
+  read, or states that none was read. Option names map mechanically across the three sources: a
+  nested file key (e.g. `{"listen": {"port": 8484}}`) is the environment variable `HOARD_` plus
+  the key path joined by `__` (`HOARD_LISTEN__PORT`) and the command-line argument `--` plus the
+  path joined by `:` (`--listen:port 8484`). The file location option itself is `--config` /
+  `HOARD_CONFIG`.
 
 **Binding and profiles**
 
@@ -244,9 +261,8 @@ signal with a request in flight; restart and compare.
 
 - **FR-014**: Hoard MUST use a single configurable data directory, creating it (and missing
   parents) on first run and reusing it on later runs. Its default location for the executable is
-  [NEEDS CLARIFICATION: the default data directory for the native executable — `./data` relative
-  to the working directory (Product spec §10 sketch), or a fixed per-user location such as the
-  OS's application-data folder?]
+  `./data` relative to the working directory, resolved once to an absolute path at startup (see
+  Edge Cases).
 - **FR-015**: The container image MUST use a fixed data directory intended for a mounted volume,
   owned by and writable for the image's non-root user, and the documentation MUST show mounting a
   volume there.
@@ -263,10 +279,9 @@ signal with a request in flight; restart and compare.
   The data-directory check runs when readiness is requested (a cheap write test, no background
   job). Later specs add their own readiness conditions (Product spec §12: disk and database
   readiness).
-- **FR-019**: The health endpoints' paths, and what happens to spec 001's `GET /health`, are
-  [NEEDS CLARIFICATION: keep `/health` (as liveness, readiness, or both combined) alongside new
-  liveness/readiness paths, or replace it?] Health responses MUST NOT reveal configuration values,
-  paths or versions.
+- **FR-019**: Liveness is `GET /health/live` and readiness is `GET /health/ready`, both
+  unauthenticated. Spec 001's `GET /health` is removed and returns 404 like any other unknown
+  path. Health responses MUST NOT reveal configuration values, paths or versions.
 - **FR-020**: Every other path MUST still return 404 (no other endpoints in this spec).
 
 **Startup feedback, shutdown and logging**
@@ -328,12 +343,12 @@ signal with a request in flight; restart and compare.
 
 ## Assumptions
 
-- Hoard speaks plain HTTP in this spec. No management surface exists yet, and Product spec §8
-  ties HTTPS to management endpoints (spec 010), served natively or through a TLS-terminating
-  reverse proxy. Architecture §8 ("team listeners require explicit TLS/auth posture") and Charter
-  §7 ("explicit network exposure with authentication/TLS") describe the team profile once
-  management exists. No backlog spec currently owns native TLS; this is flagged for the
-  maintainer rather than decided here.
+- Hoard speaks plain HTTP, and does so for the whole MVP (Clarifications 2026-10-31). A team
+  deployment that needs HTTPS puts a TLS-terminating reverse proxy in front of Hoard; native TLS
+  is post-MVP. This decision is recorded in an ADR that aligns Architecture §8 ("team listeners
+  require explicit TLS/auth posture") and Charter §7; the admin token (spec 010) covers the auth
+  half. This spec's documentation only states that Hoard serves plain HTTP; reverse-proxy
+  guidance belongs with the network-exposure docs once management exists.
 - One listen address and one port per instance; listening on several addresses at once is not
   needed for this spec's acceptance.
 - No management surface exists, so network exposure does not yet require the admin token; the
