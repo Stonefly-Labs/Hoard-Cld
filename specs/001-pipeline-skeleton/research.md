@@ -301,7 +301,8 @@ alternatives considered.
 ## R12. Exercising the release workflow before the first tag (plan decision)
 
 - **Decision:** *(plan decision, beyond the spec's FRs)* `release.yml` also runs on
-  `pull_request` when it, `eng/**` or `deploy/**` change. On a PR, the guard is skipped,
+  `pull_request` when it, `eng/**`, `deploy/**`, `global.json`, `Directory.*.props` or
+  `src/**/*.csproj` change. On a PR, the guard is skipped,
   the version is `0.0.0-pr`, every verify job runs, and `publish` is excluded by its
   condition (R10).
 - **Rationale:** otherwise the four-platform build, macOS signing and multi-arch image

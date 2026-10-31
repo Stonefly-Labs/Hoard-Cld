@@ -13,7 +13,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
-| 001 | Pipeline and solution skeleton | In progress | review | maintainer decision: fix R12 stale path filter, or accept | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
+| 001 | Pipeline and solution skeleton | In progress | implement | accept | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -46,3 +46,5 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | review | Maintainer: "yeah do that" — fix grounding MINORs (contract path filter, research test command) and the runtime uid check as T053–T055; defer nuget.config/lock files to the next spec with a real dependency; accept Hoard.Host pack warning and missing Core readme as known limitations |
 | 2026-10-31 | 001 | implement | Review round 2 tasks T053–T055 done (55/55): release-outputs contract lists full path filter; research R4 uses `dotnet test --solution` on MTP; container smoke reads the app's real/effective/saved/fs uids from `/proc/1/status` via `--pid container:` and fails on 0 (proven with a scratch `--user 0` run). Build 0 warnings, 34/34 tests; container smoke 3/3 locally |
 | 2026-10-31 | 001 | review | Round 3 (confirmation of T053–T055): tasks 55/55; build 0 warnings, 34/34 tests; PR #4 CI green on 0075a8b. security-reviewer PASS (uid check verified against `--user 0`/`00`/`root`, fails closed), docs-grounding-auditor GROUNDED WITH NOTES (round-2 MINORs closed; 1 MINOR: research.md R12 still lists the 3-path release.yml PR filter). Awaiting maintainer decision |
+| 2026-10-31 | 001 | review | Maintainer: "1: fix it dawg" — fix research.md R12 path filter as T056, then go to accept without another review round |
+| 2026-10-31 | 001 | implement | T056 done (56/56): research.md R12 lists the full six-path release.yml PR filter, matching release.yml, the contract and RELEASING.md. Docs-only; no remaining stale copies outside completed-task history in tasks.md |

@@ -369,3 +369,11 @@ Deferred (no task; for the maintainer at `accept`): a repo `nuget.config` with `
 source mapping, plus lock files and locked-mode restores, goes with the next spec that adds a real
 dependency. Accepted as known limitations: `dotnet pack Hoard.slnx` prints a "packaging has been
 disabled" warning for `Hoard.Host` (harmless, exit 0), and `Hoard.Core` has no package readme until it has content.
+
+---
+
+## Phase 10: Review round 3
+
+From the `review` step (docs-grounding-auditor). The maintainer chose to fix it.
+
+- [x] T056 In `specs/001-pipeline-skeleton/research.md` R12, list the full `release.yml` pull-request path filter (`.github/workflows/release.yml`, `eng/**`, `deploy/**`, `global.json`, `Directory.*.props`, `src/**/*.csproj`) (grounding MINOR)
