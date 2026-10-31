@@ -186,30 +186,30 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
 
 ### Tests first ⚠️
 
-- [ ] T029 [US2] Write `tests/Hoard.Release.Tests/StatusNotesTests.cs`. It runs `eng/release/status-notes.sh` against temp README files and asserts:
+- [X] T029 [US2] Write `tests/Hoard.Release.Tests/StatusNotesTests.cs`. It runs `eng/release/status-notes.sh` against temp README files and asserts:
   - the text between `<!-- release-status:start -->` and `<!-- release-status:end -->` is extracted exactly, without the markers
   - a missing start marker, a missing end marker, or an empty section exits non-zero with a clear message (R11, release CHK018)
 
   The class is skipped on Windows
-- [ ] T030 [US2] Run `dotnet test Hoard.slnx` and confirm T029 fails
+- [X] T030 [US2] Run `dotnet test Hoard.slnx` and confirm T029 fails
 
 ### Implementation
 
-- [ ] T031 [US2] Implement `eng/release/status-notes.sh <readme> <out-file>` (bash, `set -euo pipefail`, executable bit). Make T029 pass
-- [ ] T032 [US2] Add the `<!-- release-status:start -->`/`<!-- release-status:end -->` section to `README.md`, replacing "Status: planning". It contains:
+- [X] T031 [US2] Implement `eng/release/status-notes.sh <readme> <out-file>` (bash, `set -euo pipefail`, executable bit). Make T029 pass
+- [X] T032 [US2] Add the `<!-- release-status:start -->`/`<!-- release-status:end -->` section to `README.md`, replacing "Status: planning". It contains:
   - **Working**: a health-only host on `127.0.0.1:8484`; container and self-contained executables; loopback only; the container is not reachable from the host yet (until spec 002)
   - **Planned**: everything else, in one line per area
   - every executable and both image architectures are smoke-tested on native runners before release
 
   Follows FR-016, R11, spec Assumptions and Clarifications
-- [ ] T033 [US2] Create `.github/workflows/release.yml`, part 1 — triggers and guard:
+- [X] T033 [US2] Create `.github/workflows/release.yml`, part 1 — triggers and guard:
   - **Triggers**: `push` of tags `v0.0.*-alpha`, and `pull_request` to `main` on paths `.github/workflows/release.yml`, `eng/**`, `deploy/**` (R12).
   - **Permissions**: workflow-level `contents: read`. No `actions/cache`.
   - **Pinning**: all actions pinned by SHA.
   - **`guard` job**: runs only on tag push. Full-depth checkout with `persist-credentials: false`; passes `TAG: ${{ github.ref_name }}` via `env:` to `eng/release/verify-tag.sh`; outputs `version`.
   - **`version` job or step**: yields `0.0.0-pr` on PRs and the guard output on tags.
   - **Verify job condition**: `!cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped')` (R9, R10, R13, security CHK011)
-- [ ] T034 [US2] Add to `.github/workflows/release.yml`, part 2 — verify jobs:
+- [X] T034 [US2] Add to `.github/workflows/release.yml`, part 2 — verify jobs:
   - **`verify`**: on `ubuntu-latest` (the release-guard and status-notes tests are skipped on Windows). Restore, build, `dotnet test Hoard.slnx`, then `dotnet pack src/Hoard.Core -c Release -o out/packages` **without** any `Version` override. Uploads the nupkg artifact.
   - **`binaries`**: a matrix pairing each RID with its native standard runner: `linux-x64` → `ubuntu-latest`, `linux-arm64` → `ubuntu-24.04-arm`, `win-x64` → `windows-latest`, `osx-arm64` → `macos-latest`. Every step uses `shell: bash`.
     - Runs `dotnet publish src/Hoard.Host -c Release -r <rid> --self-contained -p:PublishSingleFile=true -p:DebugType=none -p:Version=<version>` and renames the output to `hoard-<version>-<rid>[.exe]`.
@@ -219,7 +219,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **`container-smoke`**: `needs: container`, a matrix `amd64` → `ubuntu-latest`, `arm64` → `ubuntu-24.04-arm`. Downloads `hoard.oci.tar`, installs `skopeo` if the runner image lacks it, loads its variant via `skopeo copy --override-arch <arch> oci-archive:hoard.oci.tar docker-daemon:hoard:<version>`, and runs `eng/smoke/smoke-container.sh`.
 
   Follows R6, R7, FR-012–FR-014
-- [ ] T035 [US2] Add to `.github/workflows/release.yml`, part 3 — the `publish` job:
+- [X] T035 [US2] Add to `.github/workflows/release.yml`, part 3 — the `publish` job:
   - **Needs and condition**: `needs: [guard, verify, binaries, container, container-smoke]`; `if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && needs.guard.result == 'success' && needs.verify.result == 'success' && needs.binaries.result == 'success' && needs.container.result == 'success' && needs.container-smoke.result == 'success'`.
   - **Permissions**: `contents: write` and `packages: write` on this job only.
   - **Steps, in order**:
@@ -231,7 +231,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Rules**: all ref and version values pass via `env:`. Credentials are never echoed, and `set -x` is never enabled around them (gap fold-in, security CHK007). The job creates or moves no tags.
 
   Follows R10, FR-013, FR-015–FR-018
-- [ ] T036 [US2] Review the finished `.github/workflows/release.yml` and `ci.yml` against the rules below. Fix any breach:
+- [X] T036 [US2] Review the finished `.github/workflows/release.yml` and `ci.yml` against the rules below. Fix any breach:
   - every action is pinned by SHA
   - every image is pinned by digest
   - there is no `${{ }}` in any `run:` block that carries ref, tag or PR data
