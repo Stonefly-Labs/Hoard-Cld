@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -34,4 +34,4 @@
 - This is an infrastructure spec: GHCR, GitHub Actions, GitHub Packages and target platforms are
   fixed by the backlog prompt and `docs/RELEASING.md`, so naming them is a constraint, not an
   implementation leak.
-- One open product question (FR-015, which projects are packable) is left for `/speckit-clarify`.
+- FR-015 (packable projects) resolved in clarify 2026-10-31: `Hoard.Core` is published.

@@ -8,6 +8,12 @@
 
 **Input**: User description: "Set up Hoard's delivery pipeline and minimal solution skeleton so that from the first merge every pull request is gated by GitHub Actions (build, tests, architecture dependency checks) and every merged spec can be released as an alpha per docs/RELEASING.md. A release tag on a main commit must publish a multi-arch (amd64, arm64) container image to GHCR, self-contained executables for linux-x64, linux-arm64, osx-arm64 and win-x64 with SHA-256 checksums, any packable NuGet packages to GitHub Packages, and a GitHub prerelease with notes. The only runtime behavior is a minimal Hoard host answering a health endpoint; CI must smoke-test both the container and a native binary. Create only the host, core and test projects. Architecture tests must encode the dependency rules by project naming pattern (core may never reference persistence, storage, protocol or identity providers, or EF Core) and prove they fail on a violation. Cover failure cases: a tag not on main, a failing test, an already-published package version. Out of scope for this spec: configuration, storage, protocols, console, and any project not needed here."
 
+## Clarifications
+
+### Session 2026-10-31
+
+- Q: Should `Hoard.Core` be published as a package from this first release, or should no project be packable until a provider package needs it? → A: Publish `Hoard.Core` now, as an essentially empty package, so the package path is exercised from the first release.
+
 ## User Scenarios & Testing *(mandatory)*
 
 Actors: the **maintainer** (reviews and merges PRs, pushes release tags), a **contributor**
@@ -194,12 +200,10 @@ skip respectively.
   checksum.
 - **FR-015**: The release MUST pack every packable `Hoard.*` package and publish to GitHub
   Packages only versions not already published; an existing version is skipped, never
-  overwritten. Which projects are packable in this spec:
-  [NEEDS CLARIFICATION: Should `Hoard.Core` be published as a package from this first release
-  (exercising the package path end to end now), or should no project be packable until a
-  provider package first needs it (the publishing step exists but finds nothing to publish, so
-  the "already-published package version" failure case in US4-3 / SC-005 cannot be proven on a
-  real package until then)?]
+  overwritten. In this spec `Hoard.Core` is the one packable project: it is published as a
+  package even though it carries no behavior yet, so the package path, including the
+  already-published skip, is proven end to end from the first release. `Hoard.Host` and the
+  test projects are not packable.
 - **FR-016**: The release MUST create a GitHub release marked as a prerelease with generated notes
   that distinguish working capabilities from planned ones, with the executables and checksums
   attached.
@@ -220,7 +224,7 @@ skip respectively.
 - **Release tag**: annotated `v0.0.N-alpha` tag on a commit reachable from `main`; immutable once
   pushed.
 - **Release artifacts**: the container image (two architectures), four platform executables,
-  their SHA-256 checksums, any packable packages, and the GitHub prerelease that groups them.
+  their SHA-256 checksums, the `Hoard.Core` package, and the GitHub prerelease that groups them.
 
 ## Success Criteria *(mandatory)*
 
@@ -231,8 +235,8 @@ skip respectively.
 - **SC-002**: A deliberate violation of each core dependency rule (four provider patterns plus EF
   Core) causes the checks to fail, naming the reference, in 5 of 5 cases.
 - **SC-003**: After the spec 001 PR merges and is tagged, `v0.0.1-alpha` is published with an
-  image for both architectures, all four executables, and matching checksums, with no manual
-  publishing steps.
+  image for both architectures, all four executables, matching checksums, and the `Hoard.Core`
+  package in GitHub Packages, with no manual publishing steps.
 - **SC-004**: The container and a native executable each report healthy within 30 seconds of
   start in CI (a spec-chosen bound that makes "bounded wait" measurable).
 - **SC-005**: A tag not on `main`, a failing test, and an already-published package version each
