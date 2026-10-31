@@ -38,8 +38,10 @@ that Hoard then has to neutralize one by one, and it would see Hoard's own `--` 
 
 - **Command line.** Accepts `--name value` and `--name=value` only.
   - After a known option, the next token is always its value, whatever it starts with
-    (`--listen:tls:password --s3cret` sets the password). `--name=value` splits at the
-    first `=`.
+    (`--listen:tls:password --s3cret` consumes `--s3cret` as the refused password's value,
+    so it is never parsed as an option or echoed). `--name=value` splits at the first `=`.
+  - `--listen:tls:password` is refused (spec FR-008), and the error names the environment
+    variable and the file as the places to set it.
   - A positional argument, a single-dash or `/` switch, a missing value, or the same
     option twice is an error.
   - Positional arguments and malformed switches are reported by position ("argument 3"),
@@ -320,13 +322,12 @@ changes trigger it.
 - `WebApplicationFactory` and `Microsoft.AspNetCore.Mvc.Testing` are dropped. They test
   through an in-memory server; this spec's behavior is the real listener.
 
-## R13. Spec inconsistency: framework command-line arguments
+## R13. Framework command-line arguments (resolved)
 
-US1 scenario 4 says framework "environment variables or arguments" asking for wider
-bindings "are ignored and Hoard still listens on loopback only". FR-004 and the clarify
-answer say every `--` argument must be a known Hoard option or startup fails. Under FR-004,
-`--urls http://0.0.0.0:8086` fails startup naming `--urls`, and never widens the listener.
-Framework environment variables are ignored. **The plan follows FR-004** (more specific,
-and the clarified answer). US1 scenario 4's "or arguments" should be reworded to "framework
-environment variables are ignored; framework command-line arguments fail startup as
-unknown options". This is raised for the maintainer at the plan gate.
+US1 scenario 4 originally said framework "environment variables or arguments" are ignored,
+which contradicted FR-004 (every `--` argument must be a known option). At the plan gate the
+maintainer chose FR-004, and the scenario was reworded:
+- framework environment variables and settings files are ignored;
+- framework command-line arguments such as `--urls` fail startup as unknown options.
+
+In neither case does the listener widen.

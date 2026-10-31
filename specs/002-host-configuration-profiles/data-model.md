@@ -13,11 +13,15 @@ The complete set of Hoard options in this spec (FR-002). Names match ignoring ca
 | `listen.tls.mode` | `HOARD_LISTEN__TLS__MODE` | `--listen:tls:mode` | unset | `https`, `proxy` (ignoring case) | no |
 | `listen.tls.certificateFile` | `HOARD_LISTEN__TLS__CERTIFICATEFILE` | `--listen:tls:certificateFile` | unset | path to a regular PEM or PKCS#12 file, ≤ 1 MiB | no |
 | `listen.tls.keyFile` | `HOARD_LISTEN__TLS__KEYFILE` | `--listen:tls:keyFile` | unset | path to a regular PEM key file, ≤ 1 MiB (PEM certificate only) | no |
-| `listen.tls.password` | `HOARD_LISTEN__TLS__PASSWORD` | `--listen:tls:password` | unset | any non-empty string | **yes** |
+| `listen.tls.password` | `HOARD_LISTEN__TLS__PASSWORD` | — (refused, see below) | unset | any non-empty string | **yes** |
 | `data.path` | `HOARD_DATA__PATH` | `--data:path` | `./data` | any path (relative paths resolve against the working directory) | no |
 | — (not a file key) | `HOARD_CONFIG` | `--config` | `hoard.json` if it exists in the working directory | path to a JSON file that must exist | no |
 
 Relative certificate, key and config paths resolve against the working directory.
+
+The password has no command-line form (spec FR-008). `--listen:tls:password` is not reported
+as an unknown option. It gets its own error, which points to `HOARD_LISTEN__TLS__PASSWORD` or
+the file, and the next token is consumed as its value and never echoed.
 
 ## Option value
 

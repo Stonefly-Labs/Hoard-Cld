@@ -15,8 +15,9 @@ read. A framework argument such as `--urls` is an unknown option. After a known 
 next argument is always its value, even if it starts with `-`, `--` or `/`.
 
 **Secret handling.**
-- The certificate password is best set through `HOARD_LISTEN__TLS__PASSWORD` or the file.
-- On the command line it is visible in process listings and shell history.
+- The certificate password is accepted only through `HOARD_LISTEN__TLS__PASSWORD` or the
+  file. `--listen:tls:password` fails startup (exit 2) with a message pointing to both;
+  the value is never echoed.
 - In a container, the environment is visible to `docker inspect`.
 - A `hoard.json` that holds a password should be readable only by its owner (mode 0600).
 
@@ -43,7 +44,7 @@ The wording is illustrative; the shape is the contract.
 
 ```text
 Hoard could not start: 2 problems in its configuration.
-  - command line --listen:prot: unknown option. Known options: --config, --listen:address, --listen:port, --listen:tls:mode, --listen:tls:certificateFile, --listen:tls:keyFile, --listen:tls:password, --data:path
+  - command line --listen:prot: unknown option. Known options: --config, --listen:address, --listen:port, --listen:tls:mode, --listen:tls:certificateFile, --listen:tls:keyFile, --data:path
   - environment HOARD_LISTEN__ADDRESS: '0.0.0.0' is not loopback, so a TLS mode is required. Set HOARD_LISTEN__TLS__MODE (or --listen:tls:mode) to 'https' with a certificate, or to 'proxy' if a TLS-terminating reverse proxy is in front.
 ```
 

@@ -190,8 +190,8 @@ assembly, it decides whether option validation and readiness aggregation move th
 - **`docs/DEVELOPMENT.md`.**
   - The options table (all three name forms, defaults), precedence, exit codes and the
     health endpoints.
-  - Secret handling: set the password through the environment or a mode-0600 file. The
-    command line is visible in process listings; `-e` values are visible to `docker
+  - Secret handling: the password is accepted only from the environment or a mode-0600
+    file, and the command-line form is refused. `-e` values are visible to `docker
     inspect`.
   - What each smoke script now proves.
   - Local HTTPS testing with `openssl`.
@@ -210,16 +210,11 @@ assembly, it decides whether option validation and readiness aggregation move th
   `https` run on the win-x64 and osx-arm64 runners (release dry run) is the only proof
   there. The PKCS#12 round-trip is the known remedy. After a crash it can leave the key in
   the user's key store; this is documented.
-- **Password on the command line** (open for the maintainer). The clarified mechanical
-  mapping gives the password a command-line form (`--listen:tls:password`). Command-line
-  arguments are readable by every local user through the process list. The plan keeps the
-  form and documents the exposure. The alternative is to refuse it on the command line,
-  pointing to the environment or the file, which amends the clarify answer.
+- **Password not on the command line** (maintainer decision at the plan gate). Spec FR-008
+  now refuses `--listen:tls:password`, so the password comes only from the environment or
+  the file, and never appears in process listings.
 - **`/data` ownership without `RUN`** (R10). Proven by the named-volume smoke run; the
   fallback is named.
-- **Spec wording** (R13). US1 scenario 4 says framework "arguments" are ignored, while
-  FR-004 makes them a startup failure. The plan follows FR-004. A one-line spec fix needs
-  the maintainer's agreement.
 - **Proxy mode is a declaration.** Hoard can't verify a proxy exists (ADR-0002), and URLs
   advertised behind a proxy remain spec 007's open decision.
 - **Two instances, one data directory** are not prevented (spec edge case); storage specs

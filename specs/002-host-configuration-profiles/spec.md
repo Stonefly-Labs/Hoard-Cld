@@ -17,6 +17,8 @@
 - Q: Where should the native executable keep its data by default when no data directory is configured? → A: `./data`, relative to the working directory, resolved to an absolute path at startup.
 - Q: What paths should the liveness and readiness endpoints use, and what happens to spec 001's `GET /health`? → A: `/health/live` and `/health/ready`; `/health` is removed and returns 404.
 - Q: How should a team deployment get TLS (HTTPS)? → A: Declare it or refuse. A non-loopback listener requires an explicit TLS mode: `https` (Hoard serves HTTPS from a configured certificate) or `proxy` (a TLS-terminating reverse proxy is in front and Hoard serves plain HTTP); without one, startup fails. Loopback needs no mode. The container image sets `proxy` explicitly. Built in this spec; recorded in [ADR-0002](../../docs/adr/0002-explicit-tls-posture.md), which amends backlog 002 and aligns Architecture §8 and Charter §7. (Revised the same session from an earlier answer of "plain HTTP for MVP, native TLS post-MVP".)
+- Q (plan gate): Should the certificate password keep the mechanical command-line form? → A: No. The password is accepted from the environment or the configuration file only. A command-line password fails startup without echoing the value. This refines the naming answer above.
+- Q (plan gate): How does US1 scenario 4 square with FR-004 for framework arguments such as `--urls`? → A: FR-004 holds. Framework environment variables and settings files are ignored; framework command-line arguments fail startup as unknown options. US1 scenario 4 was reworded to match.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -48,9 +50,12 @@ and readiness responses.
    the startup summary states its full path and that it was created.
 3. **Given** Hoard has started, **When** the liveness and readiness endpoints are requested,
    **Then** both report healthy.
-4. **Given** environment variables or arguments meant for the underlying web framework (not
-   Hoard's own options) ask for wider bindings, **When** Hoard starts, **Then** they are ignored
-   and Hoard still listens on loopback only, as it did in spec 001.
+4. **Given** environment variables, settings files or command-line arguments meant for the
+   underlying web framework (not Hoard's own options) ask for wider bindings, **When** Hoard
+   starts, **Then** framework environment variables and settings files are ignored and Hoard
+   still listens on loopback only, as it did in spec 001; framework command-line arguments
+   such as `--urls` fail startup as unknown options (FR-004). In neither case does the
+   listener widen.
 
 ---
 
@@ -261,7 +266,11 @@ signal with a request in flight; restart and compare.
   nested file key (e.g. `{"listen": {"port": 8484}}`) is the environment variable `HOARD_` plus
   the key path joined by `__` (`HOARD_LISTEN__PORT`) and the command-line argument `--` plus the
   path joined by `:` (`--listen:port 8484`). The file location option itself is `--config` /
-  `HOARD_CONFIG`.
+  `HOARD_CONFIG`. The one exception is the certificate password, a secret: it has no
+  command-line form, because arguments are visible in process listings. A password given on
+  the command line MUST fail startup, pointing to the environment variable or the file,
+  without echoing the value (Product spec §8: secrets come from environment variables,
+  mounted files or secret providers).
 
 **Binding and profiles**
 
