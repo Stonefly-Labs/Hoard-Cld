@@ -361,9 +361,9 @@ commands work only once `v0.0.1-alpha` is published and made public, checked at 
 From the `review` step (docs-grounding-auditor, architecture-boundary-reviewer, security-reviewer).
 The maintainer chose to fix the three items below and defer or accept the rest.
 
-- [ ] T053 In `specs/001-pipeline-skeleton/contracts/release-outputs.md`, list the full `release.yml` pull-request path filter (`.github/workflows/release.yml`, `eng/**`, `deploy/**`, `global.json`, `Directory.*.props`, `src/**/*.csproj`), matching `release.yml` and `docs/RELEASING.md` (grounding MINOR)
-- [ ] T054 In `specs/001-pipeline-skeleton/research.md`, replace `dotnet test Hoard.slnx` with `dotnet test --solution Hoard.slnx` and drop the VSTest packages from the decision, pointing to the MTP deviation note in `plan.md` (grounding MINOR)
-- [ ] T055 In `smoke()` in `eng/smoke/smoke-container.sh`, read the running app's uid from `/proc/1/status` through the helper container (`--pid container:$cid`) and fail unless it is non-empty and not `0`, so numeric forms like `00`/`+0` and uid-0 named users can't pass the static user check; prove it fails with a scratch `--user 0` run (security MINOR)
+- [x] T053 In `specs/001-pipeline-skeleton/contracts/release-outputs.md`, list the full `release.yml` pull-request path filter (`.github/workflows/release.yml`, `eng/**`, `deploy/**`, `global.json`, `Directory.*.props`, `src/**/*.csproj`), matching `release.yml` and `docs/RELEASING.md` (grounding MINOR)
+- [x] T054 In `specs/001-pipeline-skeleton/research.md`, replace `dotnet test Hoard.slnx` with `dotnet test --solution Hoard.slnx` and drop the VSTest packages from the decision, pointing to the MTP deviation note in `plan.md` (grounding MINOR)
+- [x] T055 In `smoke()` in `eng/smoke/smoke-container.sh`, read the running app's uid from `/proc/1/status` through the helper container (`--pid container:$cid`) and fail unless it is non-empty and not `0`, so numeric forms like `00`/`+0` and uid-0 named users can't pass the static user check; prove it fails with a scratch `--user 0` run (security MINOR)
 
 Deferred (no task; for the maintainer at `accept`): a repo `nuget.config` with `<clear/>` and package
 source mapping, plus lock files and locked-mode restores, goes with the next spec that adds a real

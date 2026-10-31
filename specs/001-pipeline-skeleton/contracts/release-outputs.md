@@ -10,7 +10,8 @@ Triggered on every `pull_request` targeting `main` and on `push` to `main`.
 | `smoke` | the `linux-x64` executable or the amd64 image does not report `200 Healthy` within 30 s, answers a non-`/health` path with anything but `404`, or listens on a non-loopback address |
 
 `release.yml` also runs its verify jobs (no publishing) on PRs that change
-`.github/workflows/release.yml`, `eng/**` or `deploy/**`.
+`.github/workflows/release.yml`, `eng/**`, `deploy/**`, `global.json`,
+`Directory.*.props` or `src/**/*.csproj`.
 
 ## Release trigger (`release.yml`)
 

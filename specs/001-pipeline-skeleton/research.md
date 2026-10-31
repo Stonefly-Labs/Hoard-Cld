@@ -77,8 +77,9 @@ alternatives considered.
 
 ## R4. Test framework
 
-- **Decision:** xUnit v3 (`xunit.v3`, `xunit.runner.visualstudio`,
-  `Microsoft.NET.Test.Sdk`), run with `dotnet test Hoard.slnx`. Host tests use
+- **Decision:** xUnit v3 (`xunit.v3`) on Microsoft.Testing.Platform, run with
+  `dotnet test --solution Hoard.slnx`; no VSTest packages (see the deviation note in
+  `plan.md`). Host tests use
   `Microsoft.AspNetCore.Mvc.Testing` (`WebApplicationFactory<Program>`). Plain `Assert`;
   no assertion library.
 - **Rationale:** mainstream, works with the .NET 10 SDK; one command runs everything.

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Smoke-tests a Hoard container image: non-root user; healthy on 127.0.0.1:8484 inside
+# Smoke-tests a Hoard container image: non-root user (image config and running process);
+# healthy on 127.0.0.1:8484 inside
 # the container within 30 s, 404 elsewhere; every listening socket on loopback; and
 # unreachable (connection refused) from a neighbouring container. Runs once with the base
 # image environment, once with a hostile environment and once with a hostile command line,
@@ -92,6 +93,15 @@ smoke() {
   report="$(docker run --rm --network "container:$cid" --entrypoint sh "$helper" -c "$inside_script")"
   grep -qx 'health=200 body=Healthy' <<< "$report" || fail "inside view: expected 200 Healthy within 30 s, got: $(head -n 1 <<< "$report")"
   grep -qx 'other=404' <<< "$report" || fail "inside view: GET /anything-else: $(sed -n 2p <<< "$report"), expected 404"
+
+  # The static user check above can't resolve named users or forms like `00`; the kernel can.
+  local uids
+  uids="$(docker run --rm --pid "container:$cid" --entrypoint sh "$helper" \
+    -c 'awk "\$1 == \"Uid:\" { print \$2, \$3, \$4, \$5 }" /proc/1/status')"
+  [[ "$uids" =~ ^[0-9]+\ [0-9]+\ [0-9]+\ [0-9]+$ ]] || fail "process view: could not read the app's uids, got '$uids'"
+  for uid in $uids; do
+    (( 10#$uid != 0 )) || fail "process view: the app runs with uid 0 (real/effective/saved/fs: $uids)"
+  done
 
   local listeners
   listeners="$(sed -n 's/^listen=//p' <<< "$report")"
