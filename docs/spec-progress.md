@@ -13,7 +13,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
-| 001 | Pipeline and solution skeleton | In progress | analyze | implement | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
+| 001 | Pipeline and solution skeleton | In progress | implement | review | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -39,3 +39,4 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | analyze | 0 CRITICAL, 0 HIGH, 4 MEDIUM, 4 LOW; 19/19 FRs covered by tasks, no constitution conflicts. No edits made. Open: repo still private (blocks T037) |
 | 2026-10-31 | 001 | analyze | Maintainer asked to fix all findings: C1 (re-run proof assigned to `release` step; FR-015/SC-005/quickstart §7/T039/T042), U1 (publish job setup steps in T035), G1 (T036 checks publish needs every verify job), I1 (edge case reworded), I2 (sixth Core rule added to FR-005/SC-002 from ARCHITECTURE §3), U2 (verify on ubuntu-latest), U3 (Dependabot consumer stated). O1 (repo public) with maintainer |
 | 2026-10-31 | 001 | analyze | Blocker cleared: maintainer made the repository public (verified `gh repo view` → PUBLIC) |
+| 2026-10-31 | 001 | implement | 44/44 tasks; build 0 warnings, 34/34 tests; local smoke pass; PR #4 CI green (build-test, smoke, release.yml dry run on all 4 native runners + amd64/arm64 images, publish skipped); gate proven failing on 3faf8ad then reverted. Deviation: xUnit v3 4.x needs Microsoft.Testing.Platform, so `dotnet test --solution Hoard.slnx` and no VSTest packages |

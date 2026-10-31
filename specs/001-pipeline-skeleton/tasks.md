@@ -272,8 +272,8 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - §3: use the exact Dockerfile build-context inputs the implementation settled on
   - §6: add the one-time visibility settings and the anonymous `docker pull` check
   - §7: keep the re-run idempotency check (SC-005) and state that it runs once, in the `release` step for `v0.0.1-alpha`, with the outcome recorded in the progress log
-- [ ] T043 Prove the PR gate fails once on PR #4 (quickstart §4, SC-005 failing-test case). Push a temporary commit with a deliberately failing test, confirm `build-test` (and the `release.yml` dry run, if triggered) fails and names the test, then revert it in the next commit. Record both CI results
-- [ ] T044 Final verification: `dotnet build Hoard.slnx` (zero warnings), `dotnet test Hoard.slnx`, and both smoke scripts locally. Then confirm `gh pr checks 4` is all green. Report the actual results
+- [X] T043 Prove the PR gate fails once on PR #4 (quickstart §4, SC-005 failing-test case). Push a temporary commit with a deliberately failing test, confirm `build-test` (and the `release.yml` dry run, if triggered) fails and names the test, then revert it in the next commit. Record both CI results
+- [X] T044 Final verification: `dotnet build Hoard.slnx` (zero warnings), `dotnet test Hoard.slnx`, and both smoke scripts locally. Then confirm `gh pr checks 4` is all green. Report the actual results
 
 ---
 
@@ -328,3 +328,9 @@ Commit after each checkpoint, and push so CI runs on PR #4.
   (architecture check and every smoke run, including the Windows Git Bash path, with real loopback
   listeners) and `container`, `container-smoke (amd64)` and `container-smoke (arm64)` passed;
   `guard` and `publish` skipped.
+- **T043.** Commit 3faf8ad added a deliberately failing test: `ci.yml` run 41244851498 failed
+  `build-test`, naming `DeliberateFailureTests.Gate_must_fail_on_this_test`, and skipped `smoke`.
+  Reverted in 86f4e0d.
+- **T044.** On 86f4e0d: `dotnet build Hoard.slnx` 0 warnings; `dotnet test --solution Hoard.slnx`
+  34/34 passed; both smoke scripts passed locally (macOS arm64); `gh pr checks 4` all green
+  (`build-test`, `smoke`, and the `release.yml` dry run with `publish` skipped).
