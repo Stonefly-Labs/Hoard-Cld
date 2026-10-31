@@ -8,7 +8,7 @@ A self-hosted, pull-through package-cache service that presents ecosystem-native
 ## 2. Architecture and runtime
 - **Backend:** .NET 10, ASP.NET Core Minimal APIs, dependency injection, typed `HttpClient` clients, background hosted services, OpenTelemetry.
 - **Frontend:** Next.js 16.4 as of 2026-10-19 (upgrade to latest supported stable at implementation), App Router, TypeScript, Tailwind CSS 4, shadcn/ui, Radix/Base UI choice finalized during design setup, Lucide, TanStack Table, Recharts, TanStack Query for client data.
-- **Bundling:** Next.js static export and .NET static-file hosting in the default distribution. No SSR, server actions, Next.js API routes, or other runtime-only features in bundled console; management API lives in .NET. Optional separate Next.js hosting may be introduced later.
+- **Bundling:** Next.js static export and .NET static-file hosting in the default distribution. No SSR, server actions, Next.js API routes, or other runtime-only features in bundled console; management API lives in .NET.
 - **Persistence:** SQLite initially; PostgreSQL provider planned. EF Core resides **inside relational persistence providers**, including migrations; `Hoard.Core` does not expose `DbContext` or depend on EF Core.
 - **Blob store:** Filesystem initially with SHA-256 content addressing; S3-compatible and Azure Blob later.
 - **Structure:** Composable modular monolith with registry/protocol, metadata persistence, blob storage and identity provider packages, shared cache core, Vertical Slice Architecture for endpoint/use-case features, management APIs, and bundled UI.
