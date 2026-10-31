@@ -1,11 +1,50 @@
 # Development workflow
 
-No application code exists yet. Current technical intent is defined by the
+Today the code is a health-only host, an empty `Hoard.Core` package, their
+tests and the delivery pipeline. Technical intent is defined by the
 [charter](PRODUCT_CHARTER.md), [vision](PRODUCT_VISION.md),
 [product specification](PRODUCT_SPEC.md), [architecture](ARCHITECTURE.md),
 and [modular-provider ADR](adr/0001-modular-provider-architecture.md).
 Feature work proceeds through GitHub Spec Kit using the
 [master backlog](HOARD_SPECKIT_MASTER_BACKLOG.md).
+
+## Build, test and smoke
+
+Prerequisites: the .NET 10 SDK (`global.json`), Docker with Buildx, bash and `lsof`.
+
+```bash
+dotnet build Hoard.slnx                 # warnings are errors
+dotnet test --solution Hoard.slnx       # architecture, host and release-script tests
+dotnet run --project src/Hoard.Host     # http://127.0.0.1:8484/health
+```
+
+`global.json` runs `dotnet test` on Microsoft.Testing.Platform, which takes the
+solution through `--solution`. The architecture tests in `tests/Hoard.Architecture.Tests`
+read `Hoard.Core`'s restore graph. They fail if Core references `Hoard.Persistence.*`,
+`Hoard.Storage.*`, `Hoard.Protocols.*`, `Hoard.Identity.*`, EF Core, or any `Hoard.*`
+project other than `Hoard.Abstractions`, directly or transitively.
+
+The smoke scripts test packaged artifacts the way CI does. Use your machine's RID
+(`osx-arm64`, `linux-x64`, ...) for the executable and the matching Linux RID for the image:
+
+```bash
+dotnet publish src/Hoard.Host -c Release -r linux-x64 --self-contained \
+  -p:PublishSingleFile=true -p:DebugType=none -o out/publish
+mkdir -p out/bin && cp out/publish/Hoard.Host out/bin/hoard-0.0.0-local-linux-x64
+eng/smoke/smoke-binary.sh out/bin/hoard-0.0.0-local-linux-x64
+
+docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64 \
+  --build-context bin=out/bin -t hoard:local --load .
+eng/smoke/smoke-container.sh hoard:local
+```
+
+Each script checks `200 Healthy` within 30 s, `404` elsewhere, and that every listener
+is on loopback, both normally and with an environment that asks for wider bindings. The
+container script also checks the image user is not root and that a neighbouring
+container gets connection refused.
+
+Every PR gets two checks from `ci.yml`, `build-test` and `smoke`. PRs that change the
+pipeline also dry-run the release workflow ([Releasing](RELEASING.md)).
 
 ## Everyday change flow
 

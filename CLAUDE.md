@@ -36,6 +36,18 @@ recreate or reference its artifacts (`hoard-speckit`/`hoard-release` skills,
 - Update README and affected docs in the same PR; describe shipped behavior,
   not plans.
 
+## Commands
+
+```bash
+dotnet build Hoard.slnx                    # zero warnings (warnings are errors)
+dotnet test --solution Hoard.slnx          # all tests; MTP needs --solution
+eng/smoke/smoke-binary.sh <exe>            # published executable: health, 404, loopback only
+eng/smoke/smoke-container.sh <image>       # image: non-root, health, loopback only, refused from bridge
+```
+
+PR checks: `ci.yml` (`build-test`, `smoke`); pipeline changes also dry-run
+`release.yml`. See `docs/DEVELOPMENT.md` for the publish/build steps the smoke scripts need.
+
 ## Architecture guardrails
 
 - `Hoard.Core` never references concrete providers or EF Core; EF Core lives

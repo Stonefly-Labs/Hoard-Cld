@@ -6,7 +6,7 @@ Prerequisites: .NET 10 SDK, Docker, bash, `lsof`, `gh` (for release checks).
 
 ```bash
 dotnet build Hoard.slnx
-dotnet test Hoard.slnx
+dotnet test --solution Hoard.slnx
 ```
 
 Expected: build succeeds with no warnings. All architecture, host and release-guard tests
@@ -26,18 +26,22 @@ See the [health endpoint contract](contracts/health-endpoint.md).
 
 ```bash
 dotnet publish src/Hoard.Host -c Release -r linux-x64 --self-contained \
-  -p:PublishSingleFile=true -o out/linux-x64
-mv out/linux-x64/Hoard.Host out/linux-x64/hoard-0.0.0-local-linux-x64   # release naming
-eng/smoke/smoke-binary.sh out/linux-x64/hoard-0.0.0-local-linux-x64
+  -p:PublishSingleFile=true -p:DebugType=none -o out/publish
+mkdir -p out/bin && cp out/publish/Hoard.Host out/bin/hoard-0.0.0-local-linux-x64   # release naming
+eng/smoke/smoke-binary.sh out/bin/hoard-0.0.0-local-linux-x64
 
 docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64 \
-  --build-context bin=out -t hoard:local --load .
+  --build-context bin=out/bin -t hoard:local --load .
 eng/smoke/smoke-container.sh hoard:local
 ```
 
-Expected: both report healthy within 30 s, in the clean run and in the hostile-env run.
-Every listener is on loopback, and a neighboring container gets connection refused. (Exact Dockerfile inputs are fixed in
-implementation; this shows the shape.)
+The Dockerfile takes the prebuilt executables from the `bin` build context, picking
+`hoard-*-linux-x64` or `hoard-*-linux-arm64` by target architecture. On an arm64 machine,
+publish `linux-arm64` and build `--platform linux/arm64`. Run `smoke-binary.sh` on an
+executable for the machine's own RID.
+
+Expected: both report healthy within 30 s, in the clean run and in every hostile run.
+Every listener is on loopback, and a neighboring container gets connection refused.
 
 ## 4. Prove the PR gate fails (once, on the 001 PR)
 
@@ -69,6 +73,10 @@ Expected:
 - `docker buildx imagetools inspect ghcr.io/stonefly-labs/hoard:0.0.1-alpha` lists
   amd64 and arm64.
 - `Hoard.Core` appears in the org's GitHub Packages.
+
+One-time settings (docs/RELEASING.md): the repository is already public. After this first
+publish, set the `hoard` container package and the `Hoard.Core` package to public, then
+check that `docker pull ghcr.io/stonefly-labs/hoard:0.0.1-alpha` works without logging in.
 
 ## 7. Re-run proves idempotency (SC-005)
 

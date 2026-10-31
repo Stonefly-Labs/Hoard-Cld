@@ -241,7 +241,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - no `--clobber`, no `latest`, no `git tag`/`git push`
 
   Follows R13, FR-017, FR-018, security CHK006/CHK011
-- [ ] T037 [US2] **Precondition: the repository is public** (otherwise the macOS/arm64 dry-run jobs bill private minutes; stop and ask the maintainer if not). Push to PR #4 and confirm the `release.yml` dry run: all four executables are built, architecture-checked and pass smoke on their native runners (including the Windows Git Bash path), the multi-arch OCI archive builds, amd64 and arm64 images pass smoke, and `publish` is skipped. Report the actual `gh pr checks` result (quickstart §5)
+- [X] T037 [US2] **Precondition: the repository is public** (otherwise the macOS/arm64 dry-run jobs bill private minutes; stop and ask the maintainer if not). Push to PR #4 and confirm the `release.yml` dry run: all four executables are built, architecture-checked and pass smoke on their native runners (including the Windows Git Bash path), the multi-arch OCI archive builds, amd64 and arm64 images pass smoke, and `publish` is skipped. Report the actual `gh pr checks` result (quickstart §5)
 
 **Checkpoint**: the dry run is green on PR #4. The real publish is verified by the `release` step after merge.
 
@@ -249,12 +249,12 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
 
 ## Phase 7: Polish and documentation (FR-019, Constitution IX)
 
-- [ ] T038 [P] Update `README.md` beyond the status section:
+- [X] T038 [P] Update `README.md` beyond the status section:
   - **Running the container**: `docker run` with the same hardening flags the smoke test uses (`--read-only --cap-drop ALL --security-opt no-new-privileges`) (gap fold-in, security CHK005), plus a note that it is not reachable from the host until spec 002.
   - **Running an executable**: download from the prerelease, verify with `sha256sum -c SHA256SUMS --ignore-missing`, `chmod +x`, and `xattr -d com.apple.quarantine` on macOS.
   - **Build and test**: `dotnet build Hoard.slnx`, `dotnet test Hoard.slnx`.
   - **Scope**: describe shipped behavior only.
-- [ ] T039 [P] Rewrite `docs/RELEASING.md` to describe the actual pipeline:
+- [X] T039 [P] Rewrite `docs/RELEASING.md` to describe the actual pipeline:
   - **Guard**: its checks and messages, and that it prevents mistakes but is not access control (write access is the trust boundary).
   - **Publish order**: packages → image → release. Nothing publishes until every verify job passes.
   - **Artifact names**, and that `latest` is never moved.
@@ -266,9 +266,9 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Package versions**: bump `<Version>` in a `Hoard.*` project file whenever a spec changes that package. An unchanged version is silently skipped by `--skip-duplicate`, so reviewers check the bump (gap fold-in, release CHK017).
   - **One-time manual settings before `v0.0.1-alpha`**: make the repository public. After the first publish, set the `hoard` GHCR package and the `Hoard.Core` package to public, and confirm `docker pull ghcr.io/stonefly-labs/hoard:0.0.1-alpha` works anonymously. Consuming `Hoard.Core` from GitHub Packages still needs a token with `read:packages`, even though the package is public (R14).
   - **CI section**: correct it to what runs today: PRs run build, tests, architecture checks and `linux-x64`/amd64 smoke; releases (and PRs touching the pipeline) smoke every executable and both image architectures on native standard runners, which are free because the repository is public.
-- [ ] T040 [P] Update `docs/DEVELOPMENT.md`: replace "No application code exists yet" with prerequisites (.NET 10 SDK, Docker, bash, `lsof`), the build, test and smoke commands, and the two PR checks
-- [ ] T041 [P] Add a "Commands" section to `CLAUDE.md`: `dotnet build Hoard.slnx`, `dotnet test Hoard.slnx`, `eng/smoke/smoke-binary.sh <exe>` and `eng/smoke/smoke-container.sh <image>` (FR-019)
-- [ ] T042 [P] Update `specs/001-pipeline-skeleton/quickstart.md`:
+- [X] T040 [P] Update `docs/DEVELOPMENT.md`: replace "No application code exists yet" with prerequisites (.NET 10 SDK, Docker, bash, `lsof`), the build, test and smoke commands, and the two PR checks
+- [X] T041 [P] Add a "Commands" section to `CLAUDE.md`: `dotnet build Hoard.slnx`, `dotnet test Hoard.slnx`, `eng/smoke/smoke-binary.sh <exe>` and `eng/smoke/smoke-container.sh <image>` (FR-019)
+- [X] T042 [P] Update `specs/001-pipeline-skeleton/quickstart.md`:
   - §3: use the exact Dockerfile build-context inputs the implementation settled on
   - §6: add the one-time visibility settings and the anonymous `docker pull` check
   - §7: keep the re-run idempotency check (SC-005) and state that it runs once, in the `release` step for `v0.0.1-alpha`, with the outcome recorded in the progress log
@@ -324,3 +324,7 @@ Commit after each checkpoint, and push so CI runs on PR #4.
   clean and all hostile runs passed. A scratch build using `ListenAnyIP(8484)` failed both scripts
   (`non-loopback listener: *`; `non-loopback listener 000…000:2124`) and was reverted. In user-defined
   Docker networks the socket table also shows Docker's embedded DNS on `127.0.0.11`, which is loopback.
+- **T037.** `release.yml` dry run on PR #4 (run 41244625332): `verify`, all four `binaries` jobs
+  (architecture check and every smoke run, including the Windows Git Bash path, with real loopback
+  listeners) and `container`, `container-smoke (amd64)` and `container-smoke (arm64)` passed;
+  `guard` and `publish` skipped.
