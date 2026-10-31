@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "targets": {
+    "net10.0": {
+      "Contoso.Helpers/1.0.0": {
+        "type": "package",
+        "dependencies": { "Microsoft.EntityFrameworkCore": "10.0.0" }
+      },
+      "Microsoft.EntityFrameworkCore/10.0.0": { "type": "package" }
+    }
+  },
+  "libraries": {
+    "Contoso.Helpers/1.0.0": { "type": "package", "path": "contoso.helpers/1.0.0" },
+    "Microsoft.EntityFrameworkCore/10.0.0": { "type": "package", "path": "microsoft.entityframeworkcore/10.0.0" }
+  },
+  "project": { "restore": { "projectName": "Hoard.Core" } }
+}

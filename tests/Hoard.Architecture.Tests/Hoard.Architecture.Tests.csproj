@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Hoard.Core/Hoard.Core.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Fixtures/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Hands the tests Hoard.Core's restore graph, project file and built assembly, as MSBuild
+       resolves them, so no path is hard-coded. -->
+  <Target Name="EmbedCoreProjectPaths" BeforeTargets="GetAssemblyAttributes">
+    <MSBuild Projects="../../src/Hoard.Core/Hoard.Core.csproj"
+             Targets="GetProjectAssetsFile"
+             Properties="CustomAfterMicrosoftCommonTargets=$(MSBuildThisFileDirectory)CoreProjectPaths.targets">
+      <Output TaskParameter="TargetOutputs" PropertyName="_CoreAssetsFile" />
+    </MSBuild>
+    <MSBuild Projects="../../src/Hoard.Core/Hoard.Core.csproj" Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" PropertyName="_CoreAssemblyFile" />
+    </MSBuild>
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>CoreAssetsFile</_Parameter1>
+        <_Parameter2>$(_CoreAssetsFile)</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>CoreProjectFile</_Parameter1>
+        <_Parameter2>$([System.IO.Path]::GetFullPath('../../src/Hoard.Core/Hoard.Core.csproj'))</_Parameter2>
+      </AssemblyAttribute>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>CoreAssemblyFile</_Parameter1>
+        <_Parameter2>$(_CoreAssemblyFile)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
+
+</Project>

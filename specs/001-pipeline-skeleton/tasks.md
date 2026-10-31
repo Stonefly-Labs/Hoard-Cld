@@ -28,14 +28,14 @@ guard (US4). See Dependencies.
 
 **Purpose**: solution conventions every project inherits (research R1).
 
-- [ ] T001 Create `global.json` pinning SDK `10.0.100` with `"rollForward": "latestFeature"`
-- [ ] T002 [P] Create `Directory.Build.props`: `TargetFramework` `net10.0`, `Nullable` enable, `ImplicitUsings` enable, `TreatWarningsAsErrors` true, `IsPackable` false, package metadata (`Authors`, `PackageLicenseExpression` `MIT`, `RepositoryUrl` `https://github.com/Stonefly-Labs/Hoard-Cld`, `PackageProjectUrl`). It MUST NOT set `Version` (R1)
-- [ ] T003 [P] Create `Directory.Packages.props` with `ManagePackageVersionsCentrally` true. Pin third-party versions only: `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`, and `Microsoft.AspNetCore.Mvc.Testing` on the 10.0.x line. Do NOT add `Microsoft.Testing.Extensions.CodeCoverage` or FluentAssertions (R4 licensing)
-- [ ] T004 [P] Add .NET build outputs (`bin/`, `obj/`, `out/`, `*.oci.tar`) to `.gitignore` and create `.dockerignore`. The `.dockerignore` excludes everything except the published-executables build context (R7)
-- [ ] T005 Create `src/Hoard.Core/Hoard.Core.csproj`: `IsPackable` true, `<Version>0.0.1-alpha</Version>`, `PackageId` `Hoard.Core`, a short `Description`, no source files and no references (FR-004, FR-015, spec Clarifications)
-- [ ] T006 Create `src/Hoard.Host/Hoard.Host.csproj` (`Microsoft.NET.Sdk.Web`, `AssemblyName` `Hoard.Host`, no project references, not packable) with a placeholder `Program.cs` that only builds the app and calls `Run` (no endpoints yet)
-- [ ] T007 Create the three test projects. `tests/Hoard.Architecture.Tests/Hoard.Architecture.Tests.csproj` has `<ProjectReference Include="../../src/Hoard.Core/Hoard.Core.csproj" ReferenceOutputAssembly="false" />`. `tests/Hoard.Host.Tests/Hoard.Host.Tests.csproj` references `Hoard.Host` and `Microsoft.AspNetCore.Mvc.Testing`. `tests/Hoard.Release.Tests/Hoard.Release.Tests.csproj` has no product references. All three use xUnit v3 (R4)
-- [ ] T008 Create `Hoard.slnx` containing exactly `Hoard.Core`, `Hoard.Host` and the three test projects (FR-001), and confirm `dotnet build Hoard.slnx` succeeds with zero warnings
+- [X] T001 Create `global.json` pinning SDK `10.0.100` with `"rollForward": "latestFeature"`
+- [X] T002 [P] Create `Directory.Build.props`: `TargetFramework` `net10.0`, `Nullable` enable, `ImplicitUsings` enable, `TreatWarningsAsErrors` true, `IsPackable` false, package metadata (`Authors`, `PackageLicenseExpression` `MIT`, `RepositoryUrl` `https://github.com/Stonefly-Labs/Hoard-Cld`, `PackageProjectUrl`). It MUST NOT set `Version` (R1)
+- [X] T003 [P] Create `Directory.Packages.props` with `ManagePackageVersionsCentrally` true. Pin third-party versions only: `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`, and `Microsoft.AspNetCore.Mvc.Testing` on the 10.0.x line. Do NOT add `Microsoft.Testing.Extensions.CodeCoverage` or FluentAssertions (R4 licensing)
+- [X] T004 [P] Add .NET build outputs (`bin/`, `obj/`, `out/`, `*.oci.tar`) to `.gitignore` and create `.dockerignore`. The `.dockerignore` excludes everything except the published-executables build context (R7)
+- [X] T005 Create `src/Hoard.Core/Hoard.Core.csproj`: `IsPackable` true, `<Version>0.0.1-alpha</Version>`, `PackageId` `Hoard.Core`, a short `Description`, no source files and no references (FR-004, FR-015, spec Clarifications)
+- [X] T006 Create `src/Hoard.Host/Hoard.Host.csproj` (`Microsoft.NET.Sdk.Web`, `AssemblyName` `Hoard.Host`, no project references, not packable) with a placeholder `Program.cs` that only builds the app and calls `Run` (no endpoints yet)
+- [X] T007 Create the three test projects. `tests/Hoard.Architecture.Tests/Hoard.Architecture.Tests.csproj` has `<ProjectReference Include="../../src/Hoard.Core/Hoard.Core.csproj" ReferenceOutputAssembly="false" />`. `tests/Hoard.Host.Tests/Hoard.Host.Tests.csproj` references `Hoard.Host` and `Microsoft.AspNetCore.Mvc.Testing`. `tests/Hoard.Release.Tests/Hoard.Release.Tests.csproj` has no product references. All three use xUnit v3 (R4)
+- [X] T008 Create `Hoard.slnx` containing exactly `Hoard.Core`, `Hoard.Host` and the three test projects (FR-001), and confirm `dotnet build Hoard.slnx` succeeds with zero warnings
 
 **Checkpoint**: the solution builds. It has no behavior and no tests yet.
 
@@ -57,7 +57,7 @@ reference to `Hoard.Persistence.*`, fails and names the cause (US1 scenarios 1�
 
 ### Tests first (must fail before implementation) ⚠️
 
-- [ ] T009 [P] [US1] Write fixture-based failing tests in `tests/Hoard.Architecture.Tests/CoreDependencyRulesFixtureTests.cs`. There is one test per deny pattern (`Hoard.Persistence.*`, `Hoard.Storage.*`, `Hoard.Protocols.*`, `Hoard.Identity.*`, `Microsoft.EntityFrameworkCore*`), each feeding a minimal `project.assets.json` document from `tests/Hoard.Architecture.Tests/Fixtures/`. Extra cases:
+- [X] T009 [P] [US1] Write fixture-based failing tests in `tests/Hoard.Architecture.Tests/CoreDependencyRulesFixtureTests.cs`. There is one test per deny pattern (`Hoard.Persistence.*`, `Hoard.Storage.*`, `Hoard.Protocols.*`, `Hoard.Identity.*`, `Microsoft.EntityFrameworkCore*`), each feeding a minimal `project.assets.json` document from `tests/Hoard.Architecture.Tests/Fixtures/`. Extra cases:
   - a transitive case (the forbidden library reached only through another library)
   - a renamed-`PackageId` project case (library name harmless, `path`/`msbuildProject` is `Hoard.Persistence.Sqlite.csproj`)
   - the sixth rule: any `Hoard.*` other than `Hoard.Abstractions` (e.g. `Hoard.Hosting`) fails, and `Hoard.Abstractions` passes
@@ -66,36 +66,36 @@ reference to `Hoard.Persistence.*`, fails and names the cause (US1 scenarios 1�
   - a missing assets file fails (never passes vacuously)
 
   Each failure asserts the exact message shape `Hoard.Core must not reference '<name>' (rule: <pattern>)` (FR-005–FR-007, SC-002, R2, R3)
-- [ ] T010 [P] [US1] Write the end-to-end violation test in `tests/Hoard.Architecture.Tests/CoreDependencyRulesRestoreTests.cs`. It creates a temp directory **outside the repo** containing a `Hoard.Core`-shaped project with a `ProjectReference` to a `Hoard.Persistence.Fake` project, runs `dotnet restore` (project references only, no network), passes the generated `obj/project.assets.json` through `CoreDependencyRules.Evaluate`, and asserts failure naming `Hoard.Persistence.Fake`. It cleans up the temp directory (R3)
-- [ ] T011 [P] [US1] Write the real-repo tests in `tests/Hoard.Architecture.Tests/CoreDependencyRulesTests.cs`:
+- [X] T010 [P] [US1] Write the end-to-end violation test in `tests/Hoard.Architecture.Tests/CoreDependencyRulesRestoreTests.cs`. It creates a temp directory **outside the repo** containing a `Hoard.Core`-shaped project with a `ProjectReference` to a `Hoard.Persistence.Fake` project, runs `dotnet restore` (project references only, no network), passes the generated `obj/project.assets.json` through `CoreDependencyRules.Evaluate`, and asserts failure naming `Hoard.Persistence.Fake`. It cleans up the temp directory (R3)
+- [X] T011 [P] [US1] Write the real-repo tests in `tests/Hoard.Architecture.Tests/CoreDependencyRulesTests.cs`:
   - Core's actual assets file (path read from an assembly attribute, see T013) passes every rule
   - `src/Hoard.Core/Hoard.Core.csproj` has no `<Reference>` items
   - the referenced assemblies of the built `Hoard.Core.dll` match no rule (R2 second layer)
-- [ ] T012 [P] [US1] Write host tests in `tests/Hoard.Host.Tests/HealthEndpointTests.cs` using `WebApplicationFactory<Program>`:
+- [X] T012 [P] [US1] Write host tests in `tests/Hoard.Host.Tests/HealthEndpointTests.cs` using `WebApplicationFactory<Program>`:
   - `GET /health` returns `200`, `text/plain`, body `Healthy`
   - `GET /` and `GET /nope` return `404`
 
   Follows contracts/health-endpoint.md, FR-002, US3 scenario 4
-- [ ] T013 [US1] Run `dotnet test Hoard.slnx` and confirm T009–T012 fail (compile failure or red) for the expected reasons. Record the result in the implement log
+- [X] T013 [US1] Run `dotnet test Hoard.slnx` and confirm T009–T012 fail (compile failure or red) for the expected reasons. Record the result in the implement log
 
 ### Implementation
 
-- [ ] T014 [US1] Implement `tests/Hoard.Architecture.Tests/CoreDependencyRules.cs`: `Evaluate(string assetsJsonPath)` returns violations. It matches `libraries` keys (name before `/`) and, for `type: project`, the project file name. It applies the five deny prefixes plus "no `Hoard.*` except `Hoard.Abstractions`", case-insensitively, and fails on a missing file or a wrong `projectName` (R2)
-- [ ] T015 [US1] Pass Core's `ProjectAssetsFile` path to the test assembly. In `tests/Hoard.Architecture.Tests/Hoard.Architecture.Tests.csproj`, add an MSBuild target that reads `Hoard.Core`'s `ProjectAssetsFile` and emits an `AssemblyMetadataAttribute` (also Core's project path and built dll path for T011). No hard-coded paths (R2)
-- [ ] T016 [US1] Implement `src/Hoard.Host/Program.cs`:
+- [X] T014 [US1] Implement `tests/Hoard.Architecture.Tests/CoreDependencyRules.cs`: `Evaluate(string assetsJsonPath)` returns violations. It matches `libraries` keys (name before `/`) and, for `type: project`, the project file name. It applies the five deny prefixes plus "no `Hoard.*` except `Hoard.Abstractions`", case-insensitively, and fails on a missing file or a wrong `projectName` (R2)
+- [X] T015 [US1] Pass Core's `ProjectAssetsFile` path to the test assembly. In `tests/Hoard.Architecture.Tests/Hoard.Architecture.Tests.csproj`, add an MSBuild target that reads `Hoard.Core`'s `ProjectAssetsFile` and emits an `AssemblyMetadataAttribute` (also Core's project path and built dll path for T011). No hard-coded paths (R2)
+- [X] T016 [US1] Implement `src/Hoard.Host/Program.cs`:
   - `AddHealthChecks()` and `MapHealthChecks("/health")`, with no other endpoints
   - `builder.WebHost.PreferHostingUrls(false)`
   - `ConfigureKestrel(o => { o.Configure(new ConfigurationBuilder().Build()); o.ListenLocalhost(8484); })`
   - `public partial class Program;` only if the SDK does not generate it
 
   Follows R5, FR-002, FR-003
-- [ ] T017 [US1] Run `dotnet test Hoard.slnx`. All tests pass with zero build warnings, and `dotnet run --project src/Hoard.Host` answers `curl http://127.0.0.1:8484/health` with `Healthy` (quickstart §1–2)
-- [ ] T018 [US1] Create `.github/workflows/ci.yml` with the `build-test` job, triggered on `pull_request` to `main` and `push` to `main`. Requirements:
+- [X] T017 [US1] Run `dotnet test Hoard.slnx`. All tests pass with zero build warnings, and `dotnet run --project src/Hoard.Host` answers `curl http://127.0.0.1:8484/health` with `Healthy` (quickstart §1–2)
+- [X] T018 [US1] Create `.github/workflows/ci.yml` with the `build-test` job, triggered on `pull_request` to `main` and `push` to `main`. Requirements:
   - workflow-level `permissions: contents: read`
   - `actions/checkout` and `actions/setup-dotnet` (from `global.json`) pinned by commit SHA with a version comment, and `persist-credentials: false`
   - steps: restore, `dotnet build Hoard.slnx --no-restore`, then `dotnet test Hoard.slnx --no-build` with a logger that names failing tests in the job output
   - no `${{ }}` carrying ref, tag or PR values inside `run:` (FR-008, R13)
-- [ ] T019 [P] [US1] Create `.github/dependabot.yml` for ecosystems `github-actions`, `docker` (`/deploy/docker`) and `nuget` (`/`), weekly. It has a consumer: the SHA and digest pins T018–T036 introduce would otherwise go stale (plan Constitution Check V, R13)
+- [X] T019 [P] [US1] Create `.github/dependabot.yml` for ecosystems `github-actions`, `docker` (`/deploy/docker`) and `nuget` (`/`), weekly. It has a consumer: the SHA and digest pins T018–T036 introduce would otherwise go stale (plan Constitution Check V, R13)
 
 **Checkpoint**: US1 is complete once `build-test` runs green on PR #4.
 
@@ -111,7 +111,7 @@ locally against a `linux-x64` publish and an amd64 image (quickstart §3).
 
 ### Smoke scripts (they are the tests; write and run them against the artifact first)
 
-- [ ] T020 [P] [US3] Write `eng/smoke/smoke-binary.sh <exe>` (bash, `set -euo pipefail`, portable to Linux and macOS):
+- [X] T020 [P] [US3] Write `eng/smoke/smoke-binary.sh <exe>` (bash, `set -euo pipefail`, portable to Linux and macOS):
   - **Clean run**: starts the executable in the background, polls `http://127.0.0.1:8484/health` for at most 30 s (SC-004), asserts `200` + `Healthy` and that `/anything-else` is `404`.
   - **Listeners**: lists listeners with `lsof -nP -a -p "$PID" -iTCP -sTCP:LISTEN`. It fails if there are none, or if any address is not `127.0.0.1` or `[::1]`.
   - **Hostile runs** (gap fold-in, security CHK002/CHK003) repeat every assertion with:
@@ -120,19 +120,19 @@ locally against a `linux-x64` publish and an amd64 image (quickstart §3).
     - (c) an `appsettings.json` placed next to a copy of the executable in a temp dir, declaring a `Kestrel:Endpoints` entry on `0.0.0.0:8487`
   - **Windows** (runs under Git Bash on `windows-latest`): maps `$!` to the Windows PID via `/proc/$PID/winpid`, lists listeners with `powershell -NoProfile -Command "Get-NetTCPConnection -State Listen -OwningProcess <winpid>"`, and accepts only `127.0.0.1`/`::1`. Linux and macOS use `lsof`.
   - Always kills the process and removes temp files via `trap`. Prints the failing assertion and the listener table on failure (R8).
-- [ ] T021 [P] [US3] Create `deploy/docker/Dockerfile`:
+- [X] T021 [P] [US3] Create `deploy/docker/Dockerfile`:
   - `FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled@sha256:<digest>`, using the current published digest
   - `ARG TARGETARCH` maps `amd64` → `linux-x64` and `arm64` → `linux-arm64`, then `COPY --chmod=0555` the prebuilt `hoard-*-<rid>` executable from the `bin` build context to `/app/hoard` (root-owned)
   - `USER $APP_UID`, `ENTRYPOINT ["/app/hoard"]`, OCI label `org.opencontainers.image.source=https://github.com/Stonefly-Labs/Hoard-Cld`
   - no `RUN` steps; leave the base image's `ASPNETCORE_HTTP_PORTS` untouched so the smoke test proves the override (R7, security CHK018)
-- [ ] T022 [P] [US3] Write `eng/smoke/smoke-container.sh <image>`:
+- [X] T022 [P] [US3] Write `eng/smoke/smoke-container.sh <image>`:
   - **Image checks**: asserts the image's `Config.User` is set and is not `root`/`0`. Runs the container detached with `--read-only --cap-drop ALL --security-opt no-new-privileges`, keeping base env.
   - **Inside view**: from a helper (busybox/curl) pinned by **multi-arch index digest** so the same script runs on amd64 and arm64 runners using `--network container:<id>`, polls `/health` for at most 30 s and asserts `200 Healthy` and the `404`. It reads `/proc/net/tcp` and `/proc/net/tcp6` and fails if there is no listening socket (state `0A`) or any is on a non-loopback address.
   - **Outside view**: a probe container on the same bridge must get *connection refused* (not a timeout) on `<container-ip>:8484`. A positive control first shows the probe reaches a helper listener on that bridge.
   - **Hostile run**: repeats everything with the hostile env from T020(a).
   - **Cleanup**: removes all containers and the network via `trap` (R8, security CHK009).
-- [ ] T023 [US3] Run the smoke scripts locally against a `linux-x64` (or host-RID) publish and an amd64 image built from it, as in quickstart §3. Confirm that the clean and hostile runs pass, and that a deliberately broken case fails the script: temporarily bind `0.0.0.0` in a scratch build, then revert. Record the outcome
-- [ ] T024 [US3] Add a `smoke` job to `.github/workflows/ci.yml` (`needs: build-test`, same pinning and permission rules). It publishes `linux-x64` with `dotnet publish src/Hoard.Host -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:DebugType=none -p:Version=0.0.0-ci`, renames the output to `hoard-0.0.0-ci-linux-x64`, and runs `eng/smoke/smoke-binary.sh`. It then builds the amd64 image with `docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64 --build-context bin=<dir> --load` and runs `eng/smoke/smoke-container.sh` (FR-009, R13)
+- [X] T023 [US3] Run the smoke scripts locally against a `linux-x64` (or host-RID) publish and an amd64 image built from it, as in quickstart §3. Confirm that the clean and hostile runs pass, and that a deliberately broken case fails the script: temporarily bind `0.0.0.0` in a scratch build, then revert. Record the outcome
+- [X] T024 [US3] Add a `smoke` job to `.github/workflows/ci.yml` (`needs: build-test`, same pinning and permission rules). It publishes `linux-x64` with `dotnet publish src/Hoard.Host -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:DebugType=none -p:Version=0.0.0-ci`, renames the output to `hoard-0.0.0-ci-linux-x64`, and runs `eng/smoke/smoke-binary.sh`. It then builds the amd64 image with `docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64 --build-context bin=<dir> --load` and runs `eng/smoke/smoke-container.sh` (FR-009, R13)
 
 **Checkpoint**: on PR #4, `ci.yml` shows both `build-test` and `smoke` green.
 
@@ -148,7 +148,7 @@ repositories (US4 scenario 1). Skip and re-run behavior (scenarios 3–4) is bui
 
 ### Tests first ⚠️
 
-- [ ] T025 [US4] Write `tests/Hoard.Release.Tests/VerifyTagTests.cs`. Each test builds a temporary bare "origin" and clone with `git`, runs `eng/release/verify-tag.sh` with env-only inputs (`TAG`, `GITHUB_SHA`, `GITHUB_OUTPUT` pointing at a temp file), and asserts the exit code, the stderr message and the output. Cases:
+- [X] T025 [US4] Write `tests/Hoard.Release.Tests/VerifyTagTests.cs`. Each test builds a temporary bare "origin" and clone with `git`, runs `eng/release/verify-tag.sh` with env-only inputs (`TAG`, `GITHUB_SHA`, `GITHUB_OUTPUT` pointing at a temp file), and asserts the exit code, the stderr message and the output. Cases:
   - **Accepted**: an annotated `v0.0.1-alpha` on the `main` merge commit outputs `version=0.0.1-alpha`. An annotated tag on a non-merge commit reachable from `main` is also accepted.
   - **Wrong pattern**: `v0.0.0-alpha`, `v0.1.0-alpha`, `v0.0.1-beta` and `v0.0.01-alpha` fail with "release tags must match v0.0.N-alpha".
   - **Injection-shaped**: `v0.0.$(id)-alpha` fails the pattern check, and a sentinel proves nothing executed.
@@ -157,11 +157,11 @@ repositories (US4 scenario 1). Skip and re-run behavior (scenarios 3–4) is bui
   - **SHA mismatch**: a `GITHUB_SHA` different from the tag's commit fails.
 
   The class is skipped on Windows (R9, security CHK015)
-- [ ] T026 [US4] Run `dotnet test Hoard.slnx` and confirm T025 fails because the script does not exist
+- [X] T026 [US4] Run `dotnet test Hoard.slnx` and confirm T025 fails because the script does not exist
 
 ### Implementation
 
-- [ ] T027 [US4] Implement `eng/release/verify-tag.sh` (bash, `set -euo pipefail`, executable bit set in git):
+- [X] T027 [US4] Implement `eng/release/verify-tag.sh` (bash, `set -euo pipefail`, executable bit set in git):
   1. Read `TAG` from env only, and validate it against `^v0\.0\.[1-9][0-9]*-alpha$` before any other use.
   2. `git fetch --force origin "+refs/tags/$TAG:refs/tags/$TAG"`, then require `git cat-file -t "refs/tags/$TAG"` = `tag`.
   3. Require `git rev-parse "refs/tags/$TAG^{commit}"` = `$GITHUB_SHA`.
@@ -169,7 +169,7 @@ repositories (US4 scenario 1). Skip and re-run behavior (scenarios 3–4) is bui
   5. Write `version=${TAG#v}` to `$GITHUB_OUTPUT`.
 
   It never creates, moves or deletes tags (FR-018) and never echoes tokens (R9)
-- [ ] T028 [US4] Run `dotnet test Hoard.slnx`. All guard tests pass on macOS/Linux
+- [X] T028 [US4] Run `dotnet test Hoard.slnx`. All guard tests pass on macOS/Linux
 
 **Checkpoint**: the guard is proven against every refusal case.
 
@@ -304,3 +304,23 @@ Within each story: tests are written and seen failing, then implementation, then
 5. **Polish**: docs describe what ships, and the failing-gate proof is recorded once.
 
 Commit after each checkpoint, and push so CI runs on PR #4.
+
+## Implementation notes
+
+- **Test runner (T003, T007, all test commands).** xUnit v3 4.x runs on Microsoft.Testing.Platform,
+  and the .NET 10 SDK no longer runs it through VSTest. `global.json` opts `dotnet test` into MTP
+  (`"test": { "runner": "Microsoft.Testing.Platform" }`). So `Microsoft.NET.Test.Sdk` and
+  `xunit.runner.visualstudio` have no consumer and are not referenced, and the solution test
+  command is `dotnet test --solution Hoard.slnx` (MTP does not accept a positional solution).
+- **T013.** Before implementation: the architecture tests failed to compile (`CoreDependencyRules`
+  missing), `Health_returns_healthy_as_plain_text` failed with `404` and the two `404` tests passed.
+- **T010.** `dotnet restore` runs from the temp root with a relative project path. macOS links
+  `/var` to `/private/var`, and NuGet silently drops a project reference it resolves under a
+  different path, which made the first version of the test see no violation.
+- **T015.** Core's `ProjectAssetsFile` comes from a `GetProjectAssetsFile` target that
+  `tests/Hoard.Architecture.Tests/CoreProjectPaths.targets` adds to Core only for that
+  `MSBuild` call (`CustomAfterMicrosoftCommonTargets`); the dll path comes from `GetTargetPath`.
+- **T023.** Run locally on macOS arm64 against an `osx-arm64` executable and a `linux-arm64` image:
+  clean and all hostile runs passed. A scratch build using `ListenAnyIP(8484)` failed both scripts
+  (`non-loopback listener: *`; `non-loopback listener 000…000:2124`) and was reverted. In user-defined
+  Docker networks the socket table also shows Docker's embedded DNS on `127.0.0.11`, which is loopback.

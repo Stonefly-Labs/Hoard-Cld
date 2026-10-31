@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <PackageId>Hoard.Core</PackageId>
+    <Version>0.0.1-alpha</Version>
+    <Description>Shared core services for Hoard, the self-hosted pull-through package cache.</Description>
+  </PropertyGroup>
+
+</Project>
