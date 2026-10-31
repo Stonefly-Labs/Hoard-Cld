@@ -1,0 +1,4 @@
+<Project>
+  <!-- Imported into Hoard.Core only when the architecture tests ask for its assets file. -->
+  <Target Name="GetProjectAssetsFile" Returns="$(ProjectAssetsFile)" />
+</Project>

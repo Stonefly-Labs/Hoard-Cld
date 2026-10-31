@@ -1,0 +1,320 @@
+name: Release
+
+# An annotated v0.0.N-alpha tag on main publishes the alpha (docs/RELEASING.md).
+# Pull requests that change the pipeline run every verify job as a dry run; publish
+# never runs for them.
+on:
+  push:
+    tags: ['v0.0.*-alpha']
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/release.yml
+      - eng/**
+      - deploy/**
+      - global.json
+      - Directory.*.props
+      - src/**/*.csproj
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: guard
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.verify.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify the tag
+        id: verify
+        env:
+          TAG: ${{ github.ref_name }}
+        run: eng/release/verify-tag.sh
+
+  verify:
+    name: verify
+    needs: guard
+    if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Hoard.slnx
+
+      # Release throughout, so the architecture rules check the build that is packed.
+      - name: Build
+        run: dotnet build Hoard.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test --solution Hoard.slnx -c Release --no-build
+
+      # Every packable Hoard.* project. No Version override: each package keeps the
+      # version in its project file.
+      - name: Pack
+        run: dotnet pack Hoard.slnx -c Release --no-build -o out/packages
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages
+          path: out/packages/*.nupkg
+          if-no-files-found: error
+
+  binaries:
+    name: binaries (${{ matrix.rid }})
+    needs: guard
+    if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runner: ubuntu-latest
+            ext: ''
+            arch: 'ELF 64-bit LSB.*x86-64'
+          - rid: linux-arm64
+            runner: ubuntu-24.04-arm
+            ext: ''
+            arch: 'ELF 64-bit LSB.*ARM aarch64'
+          - rid: win-x64
+            runner: windows-latest
+            ext: '.exe'
+            arch: 'PE32\+ executable.*x86-64'
+          - rid: osx-arm64
+            runner: macos-latest
+            ext: ''
+            arch: 'Mach-O 64-bit.*arm64'
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    env:
+      VERSION: ${{ needs.guard.outputs.version || '0.0.0-pr' }}
+      RID: ${{ matrix.rid }}
+      EXT: ${{ matrix.ext }}
+      ARCH_PATTERN: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Publish
+        run: |
+          dotnet publish src/Hoard.Host -c Release -r "$RID" --self-contained \
+            -p:PublishSingleFile=true -p:DebugType=none -p:Version="$VERSION" -o out/publish
+          mkdir -p out/bin
+          mv "out/publish/Hoard.Host$EXT" "out/bin/hoard-$VERSION-$RID$EXT"
+
+      - name: Check architecture
+        run: |
+          description="$(file -b "out/bin/hoard-$VERSION-$RID$EXT")"
+          echo "$description"
+          grep -Eq "$ARCH_PATTERN" <<< "$description" || {
+            echo "expected a $RID executable matching '$ARCH_PATTERN'" >&2
+            exit 1
+          }
+
+      - name: Smoke-test
+        run: eng/smoke/smoke-binary.sh "out/bin/hoard-$VERSION-$RID$EXT"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: hoard-${{ matrix.rid }}
+          path: out/bin/hoard-*
+          if-no-files-found: error
+
+  container:
+    name: container
+    needs: [guard, binaries]
+    if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') && needs.binaries.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: hoard-linux-*
+          merge-multiple: true
+          path: out/bin
+
+      # The docker-container driver can export a multi-platform OCI archive.
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        with:
+          driver-opts: image=moby/buildkit:v0.34.1@sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c
+
+      # Built once from the verified executables; this archive is what gets smoke-tested
+      # and pushed.
+      - name: Build the multi-arch image
+        run: |
+          docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64,linux/arm64 \
+            --build-context bin=out/bin --output type=oci,dest=out/hoard.oci.tar .
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image
+          path: out/hoard.oci.tar
+          if-no-files-found: error
+
+  container-smoke:
+    name: container-smoke (${{ matrix.arch }})
+    needs: [guard, container]
+    if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') && needs.container.result == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    env:
+      VERSION: ${{ needs.guard.outputs.version || '0.0.0-pr' }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image
+          path: out
+
+      # Preinstalled on the Ubuntu runner images; never installed ad hoc.
+      - name: Check skopeo
+        run: command -v skopeo || { echo "skopeo is missing from the runner image" >&2; exit 1; }
+
+      - name: Load the ${{ matrix.arch }} image
+        run: skopeo copy --override-arch "$ARCH" oci-archive:out/hoard.oci.tar "docker-daemon:hoard:$VERSION"
+
+      - name: Smoke-test
+        run: eng/smoke/smoke-container.sh "hoard:$VERSION"
+
+  publish:
+    name: publish
+    needs: [guard, verify, binaries, container, container-smoke]
+    if: >-
+      github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') &&
+      needs.guard.result == 'success' && needs.verify.result == 'success' &&
+      needs.binaries.result == 'success' && needs.container.result == 'success' &&
+      needs.container-smoke.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      packages: write
+    env:
+      VERSION: ${{ needs.guard.outputs.version }}
+      TAG: v${{ needs.guard.outputs.version }}
+      IMAGE: ghcr.io/stonefly-labs/hoard
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # source-url writes a NuGet config whose credential is read from NUGET_AUTH_TOKEN,
+      # so the token never appears on a command line.
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+          source-url: https://nuget.pkg.github.com/stonefly-labs/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: hoard-*
+          merge-multiple: true
+          path: out/dist
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: packages
+          path: out/packages
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image
+          path: out
+
+      # Preinstalled on the Ubuntu runner images; never installed ad hoc.
+      - name: Check skopeo
+        run: command -v skopeo || { echo "skopeo is missing from the runner image" >&2; exit 1; }
+
+      - name: Write SHA256SUMS
+        working-directory: out/dist
+        run: |
+          sha256sum hoard-* > SHA256SUMS
+          cat SHA256SUMS
+
+      # An existing version answers 409, which --skip-duplicate treats as already published.
+      - name: Publish packages to GitHub Packages
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet nuget push "out/packages/*.nupkg" \
+            --source https://nuget.pkg.github.com/stonefly-labs/index.json --skip-duplicate
+
+      - name: Publish the image to GHCR
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          skopeo login ghcr.io --username "$REGISTRY_USER" --password-stdin <<< "$REGISTRY_TOKEN"
+          if inspect="$(skopeo inspect --raw "docker://$IMAGE:$VERSION" 2>&1)"; then
+            echo "$IMAGE:$VERSION already exists; not pushing"
+          elif grep -Eqi 'manifest unknown|name unknown|not found|denied' <<< "$inspect"; then
+            skopeo copy --all oci-archive:out/hoard.oci.tar "docker://$IMAGE:$VERSION"
+          else
+            echo "$inspect" >&2
+            exit 1
+          fi
+
+      - name: Publish the GitHub prerelease
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          eng/release/status-notes.sh README.md out/notes.md
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --prerelease --verify-tag --title "Hoard $TAG" \
+              --generate-notes --notes-file out/notes.md out/dist/*
+          else
+            existing="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+            for asset in out/dist/*; do
+              if grep -qxF "$(basename "$asset")" <<< "$existing"; then
+                echo "$(basename "$asset") already attached; not replacing"
+              else
+                gh release upload "$TAG" "$asset"
+              fi
+            done
+          fi

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "targets": { "net10.0": {} },
+  "libraries": { "Contoso.Data/1.0.0": { "type": "project", "path": "../Hoard.Persistence.Sqlite/Hoard.Persistence.Sqlite.csproj", "msbuildProject": "../Hoard.Persistence.Sqlite/Hoard.Persistence.Sqlite.csproj" } },
+  "project": { "restore": { "projectName": "Hoard.Core" } }
+}

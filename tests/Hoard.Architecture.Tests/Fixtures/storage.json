@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "targets": { "net10.0": {} },
+  "libraries": { "Hoard.Storage.FileSystem/1.0.0": { "type": "package", "path": "hoard.storage.filesystem/1.0.0" } },
+  "project": { "restore": { "projectName": "Hoard.Core" } }
+}

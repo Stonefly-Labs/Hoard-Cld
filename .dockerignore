@@ -1,0 +1,3 @@
+# The image is built only from prebuilt executables passed as the "bin" build
+# context (deploy/docker/Dockerfile); nothing from the repository is copied in.
+*

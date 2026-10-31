@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Hoard.slnx
+
+      - name: Build
+        run: dotnet build Hoard.slnx --no-restore
+
+      # Includes the architecture dependency rules; failing tests are named in the output.
+      - name: Test
+        run: dotnet test --solution Hoard.slnx --no-build
+
+  smoke:
+    name: smoke
+    needs: build-test
+    runs-on: ubuntu-latest
+    env:
+      VERSION: 0.0.0-ci
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Publish linux-x64 executable
+        run: |
+          dotnet publish src/Hoard.Host -c Release -r linux-x64 --self-contained \
+            -p:PublishSingleFile=true -p:DebugType=none -p:Version="$VERSION" -o out/publish
+          mkdir -p out/bin
+          mv out/publish/Hoard.Host "out/bin/hoard-$VERSION-linux-x64"
+
+      - name: Smoke-test the executable
+        run: eng/smoke/smoke-binary.sh "out/bin/hoard-$VERSION-linux-x64"
+
+      - name: Build the amd64 image
+        run: |
+          docker buildx build -f deploy/docker/Dockerfile --platform linux/amd64 \
+            --build-context bin=out/bin -t "hoard:$VERSION" --load .
+
+      - name: Smoke-test the image
+        run: eng/smoke/smoke-container.sh "hoard:$VERSION"

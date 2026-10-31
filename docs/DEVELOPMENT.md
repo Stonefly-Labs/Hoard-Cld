@@ -1,11 +1,56 @@
 # Development workflow
 
-No application code exists yet. Current technical intent is defined by the
+Today the code is a health-only host, an empty `Hoard.Core` package, their
+tests and the delivery pipeline. Technical intent is defined by the
 [charter](PRODUCT_CHARTER.md), [vision](PRODUCT_VISION.md),
 [product specification](PRODUCT_SPEC.md), [architecture](ARCHITECTURE.md),
 and [modular-provider ADR](adr/0001-modular-provider-architecture.md).
 Feature work proceeds through GitHub Spec Kit using the
 [master backlog](HOARD_SPECKIT_MASTER_BACKLOG.md).
+
+## Build, test and smoke
+
+Prerequisites: the .NET 10 SDK (`global.json`), Docker with Buildx, bash and `lsof`.
+
+```bash
+dotnet build Hoard.slnx                 # warnings are errors
+dotnet test --solution Hoard.slnx       # architecture, host and release-script tests
+dotnet run --project src/Hoard.Host     # http://127.0.0.1:8484/health
+```
+
+`global.json` runs `dotnet test` on Microsoft.Testing.Platform, which takes the
+solution through `--solution`. The architecture tests in `tests/Hoard.Architecture.Tests`
+read `Hoard.Core`'s restore graph. They fail if Core references `Hoard.Persistence.*`,
+`Hoard.Storage.*`, `Hoard.Protocols.*`, `Hoard.Identity.*`, EF Core, or any `Hoard.*`
+project other than `Hoard.Abstractions`, directly or transitively.
+
+The smoke scripts test packaged artifacts the way CI does. The binary smoke needs an
+executable for your machine's RID; the image needs a Linux executable in `out/bin` for
+Docker's architecture. On an Apple silicon Mac:
+
+```bash
+# Executable for this machine (osx-arm64; linux-x64 on an x64 Linux machine, ...)
+dotnet publish src/Hoard.Host -c Release -r osx-arm64 --self-contained \
+  -p:PublishSingleFile=true -p:DebugType=none -o out/publish-native
+eng/smoke/smoke-binary.sh out/publish-native/Hoard.Host
+
+# Linux executable for the image (linux-arm64 here; linux-x64 with --platform linux/amd64)
+dotnet publish src/Hoard.Host -c Release -r linux-arm64 --self-contained \
+  -p:PublishSingleFile=true -p:DebugType=none -o out/publish
+mkdir -p out/bin && cp out/publish/Hoard.Host out/bin/hoard-0.0.0-local-linux-arm64
+docker buildx build -f deploy/docker/Dockerfile --platform linux/arm64 \
+  --build-context bin=out/bin -t hoard:local --load .
+eng/smoke/smoke-container.sh hoard:local
+```
+
+Each script checks `200 Healthy` within 30 s, `404` elsewhere, and that every listener
+is on loopback, both normally and when asked for wider bindings: by environment variables
+and by a `--urls` command-line argument, and for the binary also by an `appsettings.json`
+next to it. The container script also checks the image user is not root and that a
+neighbouring container gets connection refused.
+
+Every PR gets two checks from `ci.yml`, `build-test` and `smoke`. PRs that change the
+pipeline also dry-run the release workflow ([Releasing](RELEASING.md)).
 
 ## Everyday change flow
 
