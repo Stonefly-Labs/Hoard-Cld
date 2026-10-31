@@ -13,7 +13,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
-| 001 | Pipeline and solution skeleton | In progress | implement | accept | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
+| 001 | Pipeline and solution skeleton | Accepted | accept | release (after maintainer merges) | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -48,3 +48,4 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | review | Round 3 (confirmation of T053–T055): tasks 55/55; build 0 warnings, 34/34 tests; PR #4 CI green on 0075a8b. security-reviewer PASS (uid check verified against `--user 0`/`00`/`root`, fails closed), docs-grounding-auditor GROUNDED WITH NOTES (round-2 MINORs closed; 1 MINOR: research.md R12 still lists the 3-path release.yml PR filter). Awaiting maintainer decision |
 | 2026-10-31 | 001 | review | Maintainer: "1: fix it dawg" — fix research.md R12 path filter as T056, then go to accept without another review round |
 | 2026-10-31 | 001 | implement | T056 done (56/56): research.md R12 lists the full six-path release.yml PR filter, matching release.yml, the contract and RELEASING.md. Docs-only; no remaining stale copies outside completed-task history in tasks.md |
+| 2026-10-31 | 001 | accept | Maintainer: "I accept homie". 56/56 tasks; build 0 warnings, 34/34 tests; PR #4 CI green on 99691a7; known limitations: Hoard.Host pack warning, no Core readme, nuget.config/lock files deferred, release path first exercised end to end at v0.0.1-alpha. PR marked ready |
