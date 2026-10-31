@@ -27,7 +27,7 @@ jobs:
   guard:
     name: guard
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     outputs:
       version: ${{ steps.verify.outputs.version }}
@@ -47,7 +47,7 @@ jobs:
     name: verify
     needs: guard
     if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,19 +88,19 @@ jobs:
       matrix:
         include:
           - rid: linux-x64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
             ext: ''
             arch: 'ELF 64-bit LSB.*x86-64'
           - rid: linux-arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             ext: ''
             arch: 'ELF 64-bit LSB.*ARM aarch64'
           - rid: win-x64
-            runner: windows-latest
+            runner: windows-2025
             ext: '.exe'
             arch: 'PE32\+ executable.*x86-64'
           - rid: osx-arm64
-            runner: macos-latest
+            runner: macos-26
             ext: ''
             arch: 'Mach-O 64-bit.*arm64'
     runs-on: ${{ matrix.runner }}
@@ -151,7 +151,7 @@ jobs:
     name: container
     needs: [guard, binaries]
     if: ${{ !cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped') && needs.binaries.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -191,9 +191,9 @@ jobs:
       matrix:
         include:
           - arch: amd64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 15
     env:
@@ -227,7 +227,7 @@ jobs:
       needs.guard.result == 'success' && needs.verify.result == 'success' &&
       needs.binaries.result == 'success' && needs.container.result == 'success' &&
       needs.container-smoke.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: write
