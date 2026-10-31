@@ -95,7 +95,7 @@ reference to `Hoard.Persistence.*`, fails and names the cause (US1 scenarios 1�
   - `actions/checkout` and `actions/setup-dotnet` (from `global.json`) pinned by commit SHA with a version comment, and `persist-credentials: false`
   - steps: restore, `dotnet build Hoard.slnx --no-restore`, then `dotnet test Hoard.slnx --no-build` with a logger that names failing tests in the job output
   - no `${{ }}` carrying ref, tag or PR values inside `run:` (FR-008, R13)
-- [ ] T019 [P] [US1] Create `.github/dependabot.yml` for ecosystems `github-actions`, `docker` (`/deploy/docker`) and `nuget` (`/`), weekly (R13)
+- [ ] T019 [P] [US1] Create `.github/dependabot.yml` for ecosystems `github-actions`, `docker` (`/deploy/docker`) and `nuget` (`/`), weekly. It has a consumer: the SHA and digest pins T018–T036 introduce would otherwise go stale (plan Constitution Check V, R13)
 
 **Checkpoint**: US1 is complete once `build-test` runs green on PR #4.
 
@@ -210,7 +210,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **`version` job or step**: yields `0.0.0-pr` on PRs and the guard output on tags.
   - **Verify job condition**: `!cancelled() && (needs.guard.result == 'success' || needs.guard.result == 'skipped')` (R9, R10, R13, security CHK011)
 - [ ] T034 [US2] Add to `.github/workflows/release.yml`, part 2 — verify jobs:
-  - **`verify`**: restore, build, `dotnet test Hoard.slnx`, then `dotnet pack src/Hoard.Core -c Release -o out/packages` **without** any `Version` override. Uploads the nupkg artifact.
+  - **`verify`**: on `ubuntu-latest` (the release-guard and status-notes tests are skipped on Windows). Restore, build, `dotnet test Hoard.slnx`, then `dotnet pack src/Hoard.Core -c Release -o out/packages` **without** any `Version` override. Uploads the nupkg artifact.
   - **`binaries`**: a matrix pairing each RID with its native standard runner: `linux-x64` → `ubuntu-latest`, `linux-arm64` → `ubuntu-24.04-arm`, `win-x64` → `windows-latest`, `osx-arm64` → `macos-latest`. Every step uses `shell: bash`.
     - Runs `dotnet publish src/Hoard.Host -c Release -r <rid> --self-contained -p:PublishSingleFile=true -p:DebugType=none -p:Version=<version>` and renames the output to `hoard-<version>-<rid>[.exe]`.
     - Architecture check with `file`, failing unless the output is ELF x86-64 / ELF aarch64 / PE32+ x86-64 / Mach-O arm64 respectively.
@@ -223,7 +223,8 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Needs and condition**: `needs: [guard, verify, binaries, container, container-smoke]`; `if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && needs.guard.result == 'success' && needs.verify.result == 'success' && needs.binaries.result == 'success' && needs.container.result == 'success' && needs.container-smoke.result == 'success'`.
   - **Permissions**: `contents: write` and `packages: write` on this job only.
   - **Steps, in order**:
-    1. `sha256sum hoard-* > SHA256SUMS`.
+    0. Setup on `ubuntu-latest`: SHA-pinned checkout (`persist-credentials: false`; needed for `eng/release/status-notes.sh` and `README.md`), `actions/setup-dotnet` from `global.json` (for `dotnet nuget push`), and `actions/download-artifact` for the four executables, the `.nupkg` and `hoard.oci.tar` into known directories. Install `skopeo` if the runner image lacks it.
+    1. In the executables directory, `sha256sum hoard-* > SHA256SUMS`, so each line carries the bare file name that `sha256sum -c SHA256SUMS --ignore-missing` expects.
     2. `dotnet nuget push out/packages/*.nupkg --source https://nuget.pkg.github.com/stonefly-labs/index.json --skip-duplicate`, with the key passed via `env` and never on the command line.
     3. `skopeo inspect docker://ghcr.io/stonefly-labs/hoard:<version>`. Push with `skopeo copy --all oci-archive:hoard.oci.tar docker://ghcr.io/stonefly-labs/hoard:<version>` only if that tag is absent. Never write `latest`.
     4. Generate notes with `eng/release/status-notes.sh`. If `gh release view` finds no release, run `gh release create "$TAG" --prerelease --verify-tag --generate-notes --notes-file notes.md` with all executables and `SHA256SUMS` in one call. Otherwise upload only the missing assets, never with `--clobber`.
@@ -236,6 +237,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - there is no `${{ }}` in any `run:` block that carries ref, tag or PR data
   - `persist-credentials: false` is set on every checkout
   - `publish` is the only job with write permissions
+  - `publish` `needs` the guard and every verify job and requires `success` from each, so a failing test, arch check or smoke test can never reach it (SC-005 failing-test case)
   - no `--clobber`, no `latest`, no `git tag`/`git push`
 
   Follows R13, FR-017, FR-018, security CHK006/CHK011
@@ -260,6 +262,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
   - **Release notes**: they come from the README status section.
   - **PR dry run**.
   - **Re-runs**: skip what exists and upload only missing assets. After a partial publish (e.g. package pushed, image push failed), re-run the same run. If assets were partly uploaded and `SHA256SUMS` might not match, release a new version, never retag (gap fold-in, release CHK004/CHK006).
+  - **First-release check**: after `v0.0.1-alpha` publishes, re-run its release run once to prove the already-published skip (quickstart §7, SC-005).
   - **Package versions**: bump `<Version>` in a `Hoard.*` project file whenever a spec changes that package. An unchanged version is silently skipped by `--skip-duplicate`, so reviewers check the bump (gap fold-in, release CHK017).
   - **One-time manual settings before `v0.0.1-alpha`**: make the repository public. After the first publish, set the `hoard` GHCR package and the `Hoard.Core` package to public, and confirm `docker pull ghcr.io/stonefly-labs/hoard:0.0.1-alpha` works anonymously. Consuming `Hoard.Core` from GitHub Packages still needs a token with `read:packages`, even though the package is public (R14).
   - **CI section**: correct it to what runs today: PRs run build, tests, architecture checks and `linux-x64`/amd64 smoke; releases (and PRs touching the pipeline) smoke every executable and both image architectures on native standard runners, which are free because the repository is public.
@@ -268,7 +271,7 @@ notes, with nothing published unless every verify job passed (FR-012–FR-017).
 - [ ] T042 [P] Update `specs/001-pipeline-skeleton/quickstart.md`:
   - §3: use the exact Dockerfile build-context inputs the implementation settled on
   - §6: add the one-time visibility settings and the anonymous `docker pull` check
-  - §7: keep the re-run idempotency check (SC-005)
+  - §7: keep the re-run idempotency check (SC-005) and state that it runs once, in the `release` step for `v0.0.1-alpha`, with the outcome recorded in the progress log
 - [ ] T043 Prove the PR gate fails once on PR #4 (quickstart §4, SC-005 failing-test case). Push a temporary commit with a deliberately failing test, confirm `build-test` (and the `release.yml` dry run, if triggered) fails and names the test, then revert it in the next commit. Record both CI results
 - [ ] T044 Final verification: `dotnet build Hoard.slnx` (zero warnings), `dotnet test Hoard.slnx`, and both smoke scripts locally. Then confirm `gh pr checks 4` is all green. Report the actual results
 

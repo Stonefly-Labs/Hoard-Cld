@@ -134,8 +134,10 @@ skip respectively.
 
 ### Edge Cases
 
-- A tag that does not match `v0.0.N-alpha` does not trigger a release (the `-beta`/`-rc` scheme
-  arrives with the v0.1.0 MVP release, `docs/RELEASING.md`).
+- A tag that does not match `v0.0.N-alpha` publishes nothing: either it does not start the
+  release at all, or (for near-misses such as `v0.0.0-alpha` or `v0.0.01-alpha`) the release
+  starts and fails its tag check before anything is published. The `-beta`/`-rc` scheme arrives
+  with the v0.1.0 MVP release (`docs/RELEASING.md`).
 - A lightweight (non-annotated) tag matching the pattern is rejected before anything is
   published, with a message saying release tags must be annotated.
 - A tag pushed on a non-merge commit that is still reachable from `main` is accepted;
@@ -172,7 +174,9 @@ skip respectively.
 
 - **FR-005**: Architecture tests MUST encode by project/assembly naming pattern that the core
   project never references `Hoard.Persistence.*`, `Hoard.Storage.*`, `Hoard.Protocols.*` or
-  `Hoard.Identity.*`, nor EF Core.
+  `Hoard.Identity.*`, nor EF Core, nor any other `Hoard.*` project except `Hoard.Abstractions`
+  (`docs/ARCHITECTURE.md` §3: Core may reference only Abstractions and common framework
+  libraries).
 - **FR-006**: The rules MUST apply to projects that do not exist yet: a future project matching a
   forbidden pattern is caught without editing the tests.
 - **FR-007**: The test suite MUST prove each rule fails on a deliberate violation, and the failure
@@ -204,8 +208,9 @@ skip respectively.
 - **FR-015**: The release MUST pack every packable `Hoard.*` package and publish to GitHub
   Packages only versions not already published; an existing version is skipped, never
   overwritten. In this spec `Hoard.Core` is the one packable project: it is published as a
-  package even though it carries no behavior yet, so the package path, including the
-  already-published skip, is proven end to end from the first release. `Hoard.Host` and the
+  package even though it carries no behavior yet, so the package path is proven end to end from
+  the first release: `v0.0.1-alpha` proves the publish, and one re-run of that same release run
+  proves the already-published skip. `Hoard.Host` and the
   test projects are not packable.
 - **FR-016**: The release MUST create a GitHub release marked as a prerelease with generated notes
   that distinguish working capabilities from planned ones, with the executables and checksums
@@ -235,15 +240,18 @@ skip respectively.
 
 - **SC-001**: 100% of PRs to `main` receive an automatic pass/fail status covering build, tests
   and architecture checks, with no manual trigger.
-- **SC-002**: A deliberate violation of each core dependency rule (four provider patterns plus EF
-  Core) causes the checks to fail, naming the reference, in 5 of 5 cases.
+- **SC-002**: A deliberate violation of each core dependency rule (four provider patterns, EF
+  Core, and any other `Hoard.*` project except `Hoard.Abstractions`) causes the checks to fail,
+  naming the reference, in 6 of 6 cases.
 - **SC-003**: After the spec 001 PR merges and is tagged, `v0.0.1-alpha` is published with an
   image for both architectures, all four executables, matching checksums, and the `Hoard.Core`
   package in GitHub Packages, with no manual publishing steps.
 - **SC-004**: The container and a native executable each report healthy within 30 seconds of
   start in CI (a spec-chosen bound that makes "bounded wait" measurable).
 - **SC-005**: A tag not on `main`, a failing test, and an already-published package version each
-  result in no unintended publication, verified once each.
+  result in no unintended publication, verified once each: the tag case by the guard's tests, the
+  failing-test case by the PR gate plus the workflow's structure (publishing depends on every
+  verify job), and the already-published case by re-running the `v0.0.1-alpha` release once.
 
 ## Assumptions
 

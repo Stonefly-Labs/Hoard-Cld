@@ -72,6 +72,7 @@ Expected:
 
 ## 7. Re-run proves idempotency (SC-005)
 
-Re-run the successful release run from the Actions UI. Expected: the package is skipped
+Done once, during the `drive-speckit` `release` step for `v0.0.1-alpha`, after §6 passes.
+Re-run the successful release run (`gh run rerun <id>`). Expected: the package is skipped
 as already published, the image push is skipped, no release assets are replaced, and the
-run succeeds.
+run succeeds. Record the outcome in the progress log's `release` entry.
