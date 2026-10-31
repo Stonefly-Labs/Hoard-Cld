@@ -50,8 +50,8 @@ Pushing a `v0.0.*-alpha` tag runs these jobs:
      `dotnet pack` of the solution, which packs every packable `Hoard.*` project with no
      version override.
    - **`binaries`**: one job per platform on its native runner (`linux-x64`
-     `ubuntu-latest`, `linux-arm64` `ubuntu-24.04-arm`, `win-x64` `windows-latest`,
-     `osx-arm64` `macos-latest`). Each publishes a self-contained single-file executable,
+     `ubuntu-26.04`, `linux-arm64` `ubuntu-26.04-arm`, `win-x64` `windows-2025`,
+     `osx-arm64` `macos-26`). Each publishes a self-contained single-file executable,
      checks its architecture with `file`, and runs
      [`eng/smoke/smoke-binary.sh`](../eng/smoke/smoke-binary.sh) on it. One platform's
      failure still reports the others.
@@ -143,3 +143,7 @@ Pull requests that change `release.yml`, `eng/**`, `deploy/**`, `global.json`,
 workflow's verify jobs as a dry run (version `0.0.0-pr`, `publish` skipped). That covers
 every executable and both image architectures on native standard runners, which are free
 because the repository is public. A PR merges only when CI is green.
+
+Both workflows pin versioned runner images (`ubuntu-26.04`, `ubuntu-26.04-arm`,
+`windows-2025`, `macos-26`) and never use a `-latest` label, so a runner image only
+changes in a pull request that bumps it.
