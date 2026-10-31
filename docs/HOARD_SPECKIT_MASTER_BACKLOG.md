@@ -6,9 +6,11 @@
 
 ## How to use this document
 
+Run `/drive-speckit`: it advances one step per invocation, using the prompts below verbatim, and records progress in [spec-progress.md](spec-progress.md). The manual equivalent:
+
 1. Run the [constitution prompt](#constitution-prompt) once with `/speckit-constitution`.
 2. Take MVP specs **in order**. Paste one prompt into `/speckit-specify`, then run `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-analyze` and `/speckit-implement`.
-3. Each spec is one branch (Spec Kit's `NNN-short-name`) and one PR. MVP spec numbers below are the intended spec directory numbers; if Spec Kit would assign a different number, pass `--number`. Post-MVP items carry `X-` IDs and take the next free number when started.
+3. Each spec is one `feature/NNN-<slug>` branch and one PR. MVP spec numbers below are the spec directory numbers (`specs/NNN-<slug>`, set via `SPECIFY_FEATURE_DIRECTORY`). Post-MVP items carry `X-` IDs and take the next free number when started.
 4. A spec is done when its acceptance focus passes in CI and the maintainer merges the PR. The merge commit is then tagged `v0.0.N-alpha` ([Releasing](RELEASING.md)).
 5. Respect each spec's **Out of scope** line. Work that belongs to a later spec stays there.
 

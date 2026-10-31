@@ -17,11 +17,17 @@ recreate or reference its artifacts (`hoard-speckit`/`hoard-release` skills,
 
 ## How work happens
 
-- Features go through Spec Kit (`/speckit-specify` → `clarify` → `plan` →
-  `tasks` → `analyze` → `implement`), one backlog spec at a time, in order.
-- One branch and one PR per spec. Never commit to `main`. The maintainer
-  merges; never merge a PR yourself. After the merge, the merge commit is
-  tagged `v0.0.N-alpha` (`docs/RELEASING.md`) when the maintainer asks.
+- Drive feature work with `/drive-speckit`: one Spec Kit step per run, one
+  backlog spec at a time, in order, tracked in `docs/spec-progress.md`.
+- One `feature/NNN-<slug>` branch and one PR per spec. Never commit to `main`.
+  The maintainer merges; never merge a PR yourself. After the merge,
+  `/drive-speckit` tags the merge commit `v0.0.N-alpha` and verifies the release
+  (`docs/RELEASING.md`).
+- Before specifying, planning or implementing, ground with `/hoard-ground`.
+  Record decisions with `/hoard-adr` so every doc stays consistent.
+- Reviewer agents in `.claude/agents/` (grounding, architecture boundaries,
+  security, cache integrity, NuGet protocol, console UX) gate plans and reviews;
+  `drive-speckit` picks which ones apply.
 - Stay inside a spec's **Out of scope** line. YAGNI: no abstraction, contract
   or option without a current consumer.
 - Core cache engine and protocol work is test-first. Protocol specs need
