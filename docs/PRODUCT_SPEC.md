@@ -162,7 +162,7 @@ Restricted endpoints require the admin token whenever Hoard is bound to a non-lo
 - Default bundle uses static export. Keep data loaded client-side from the ASP.NET Core management API. Make base URLs work behind reverse proxies.
 
 ## 8. Security and isolation
-- Bind only to loopback by default; explicit opt-in to `0.0.0.0`.
+- Bind only to loopback by default; explicit opt-in to `0.0.0.0`. The official container image opts in inside the container, so exposure on the host is governed by Docker port publishing (personal docs use `-p 127.0.0.1:8484:8484`).
 - UI management and registry read/write permissions are separate surfaces.
 - Team management endpoints are protected by the built-in admin token (generated on first run, shown once, stored hashed, rotatable) and HTTPS, either natively or via a TLS-terminating reverse proxy.
 - Anonymous network package reads are allowed only by explicit deployment opt-in. Scoped package tokens arrive with private feeds (post-MVP); OIDC console login is post-MVP.
