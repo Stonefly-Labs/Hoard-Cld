@@ -23,7 +23,6 @@ Rows for specs are added when they start. Status values: `Not started`,
 
 | Date | Spec | Issue |
 |---|---|---|
-| 2026-10-31 | 001 | Pre-implement: repository is still PRIVATE. Plan/T037 require it public before implement pushes `release.yml` (macOS/arm64 dry-run runners). Maintainer action |
 
 ## Log
 
@@ -39,3 +38,4 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | tasks | Amended: maintainer chose native hosted runners for every platform (repo public → standard runners free); release smoke-tests all 4 executables + amd64/arm64 images; superseded the "accept unexecuted artifacts" answer. Repo must be public before implement pushes release.yml |
 | 2026-10-31 | 001 | analyze | 0 CRITICAL, 0 HIGH, 4 MEDIUM, 4 LOW; 19/19 FRs covered by tasks, no constitution conflicts. No edits made. Open: repo still private (blocks T037) |
 | 2026-10-31 | 001 | analyze | Maintainer asked to fix all findings: C1 (re-run proof assigned to `release` step; FR-015/SC-005/quickstart §7/T039/T042), U1 (publish job setup steps in T035), G1 (T036 checks publish needs every verify job), I1 (edge case reworded), I2 (sixth Core rule added to FR-005/SC-002 from ARCHITECTURE §3), U2 (verify on ubuntu-latest), U3 (Dependabot consumer stated). O1 (repo public) with maintainer |
+| 2026-10-31 | 001 | analyze | Blocker cleared: maintainer made the repository public (verified `gh repo view` → PUBLIC) |
