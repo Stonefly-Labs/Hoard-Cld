@@ -1,7 +1,7 @@
 # Hoard — Architecture
 
-**Version:** 0.2 (proposed)  
-**Date:** 2026-10-20  
+**Version:** 0.3 (proposed)  
+**Date:** 2026-10-31  
 **Status:** Architectural baseline, subject to RFC/ADR review  
 **Product:** Hoard · MIT
 
@@ -9,7 +9,7 @@
 
 Hoard is a .NET 10 / ASP.NET Core **composable modular monolith**. Modules are distributed as NuGet packages and are assembled into a deployment at build time. Built-in and bundled providers are selected, validated and activated **at startup**, with explicit restart for changes. Normal management and registry HTTP workflows use **Vertical Slice Architecture (VSA)**. Cross-feature caching integrity, atomic blob publication, request coordination, authentication isolation, bounded streaming and cache policy semantics are centrally implemented shared services, not duplicated in each vertical slice.
 
-The first official distribution is NuGet v3 + SQLite metadata + filesystem artifacts, with a statically exported Next.js management UI served by ASP.NET Core. PostgreSQL, object stores, other package protocols and identity systems are independent provider implementations. The first release is single-process/single-node; HA and dynamic plugins are deferred.
+The first official distribution is NuGet v3 (public upstreams) + SQLite metadata + filesystem artifacts + built-in admin token authentication, with a statically exported Next.js management UI served by ASP.NET Core. PostgreSQL, object stores, other package protocols and identity systems are independent provider implementations. The first release is single-process/single-node; HA and dynamic plugins are deferred.
 
 ## 2. Architecture shape
 
@@ -50,6 +50,8 @@ The diagram expresses runtime interactions; compile-time dependency edges must f
 
 **Forbidden examples:** `Hoard.Core -> Hoard.Persistence.Sqlite`; `Hoard.Application -> DbContext`; NuGet protocol referencing Azure Blob provider; one feature slice referencing another slice's internal handler. Contract ownership must be kept minimal and stable; architectural tests enforce this.
 
+**Contract maturity.** The assembly boundaries and dependency rules above hold from the first spec. Public provider contracts start minimal, shaped by the one implementation that needs them, and are versioned and qualified with shared conformance suites when a second implementation arrives (PostgreSQL, a second protocol, object storage). No abstraction is built without a consumer.
+
 ## 4. Provider categories and cardinality
 
 | Category | Initial cardinality | First implementation | Later implementations |
@@ -57,9 +59,9 @@ The diagram expresses runtime interactions; compile-time dependency edges must f
 | Package protocol | Many simultaneously | NuGet v3 | Go, Maven, npm, PyPI, Cargo |
 | Metadata persistence | Exactly one authoritative | SQLite | PostgreSQL, SQL Server, MySQL; NoSQL only after separate proof |
 | Artifact storage | Exactly one authoritative | Filesystem | S3-compatible, Azure Blob |
-| Authentication | Multiple supported schemes | Loopback/local and optional package tokens | Generic OIDC, Entra configuration convenience |
+| Authentication | Multiple supported schemes | Loopback anonymous; built-in admin token for management | Package tokens (with private feeds), generic OIDC, Entra configuration convenience |
 | Authorization | Central permission model | Core role/permission checks | Claims mapping, more advanced policies |
-| Secrets | Potentially multiple resolvers | Environment/file | Key Vault or community integrations |
+| Secrets | Potentially multiple resolvers | Environment/file for startup settings | Upstream credentials encrypted in the metadata DB via Data Protection (with private feeds); Key Vault or community integrations |
 | Behavior hooks | Narrow, documented extension points only | No general public hook bus needed MVP | Audit/export, notifications, retention hooks after demand |
 
 Authentication does not automatically grant authorization. Browser users, CI credentials and native package clients are distinct entry points with normalized Hoard principals and policy checks.
@@ -170,6 +172,8 @@ These extension methods are intended future Hoard APIs, not current packages.
 
 **Custom distribution:** Reference desired NuGet packages in a `.csproj`, register providers, publish a new binary/image, configure choices and restart. Build composition is explicit/reproducible.
 
+**Registries:** Registry definitions are runtime data in the metadata database, managed through the management API and console; startup configuration may seed them on first run only. Provider/module selection stays in startup configuration and requires restart.
+
 **Management API:** Expose installed/available/active provider lists, descriptive capabilities, versions, health and sanitized config definitions, behind appropriate management access. The Next.js interface only offers actions declared as supported; it must not mistake "installed" for "enabled" or "healthy".
 
 **Configurations:** Define CLI/environment/file precedence; support reference-based secrets; validator catches unknown IDs, incompatible modules, missing required capabilities and wrong cardinality; version configs and document migration. Never log raw credentials.
@@ -201,10 +205,11 @@ Blob payloads belong in storage providers; metadata providers store references. 
 
 ## 12. Rollout sequence
 
-- **Foundation:** F-01–F-07, Host and basic slices; provider contract tests and secure config defaults.
-- **First usable product:** SQLite + filesystem + NuGet protocol module, real-client test harness, management API + Next.js static console.
-- **Prove interchangeability early:** PostgreSQL and a second independent package protocol, even if later than MVP release gate.
-- **Team:** Identity scheme module model (F-08), OIDC/Entra, scoped native client tokens, hardened shared service experience.
+- **Pipeline and skeleton:** Solution and module boundaries with architecture tests, GitHub Actions CI, CD of container/binaries/packages, per-spec alpha releases.
+- **First cached restore:** Host, configuration, SQLite + filesystem, cache engine and NuGet module proven with real `dotnet restore`.
+- **MVP:** NuGet coverage, management API with admin token, console-managed registries, quota/eviction, full console, multi-platform distribution.
+- **Prove interchangeability:** Private feeds with package tokens, PostgreSQL and a second protocol (Go), qualifying shared provider conformance suites and versioned contracts.
+- **Team:** Identity scheme module model, OIDC/Entra, audit, hardened shared service experience.
 - **Expansion:** More protocols/stores, SQL Server/MySQL where demand warrants; separately assess NoSQL.
 - **Deferred:** Runtime plugin marketplace/loading, untrusted plugin sandboxing, live provider swap, cross-language RPC plugins and multi-node HA.
 
@@ -212,6 +217,8 @@ Blob payloads belong in storage providers; metadata providers store references. 
 
 **Accepted for design planning:** [ADR-0001: Composable modular monolith with vertical feature slices](adr/0001-modular-provider-architecture.md).
 
-**To decide before stable API release:** exact public module registration signatures; `Hoard.Abstractions` split threshold; EF migrations operational policy; capabilities schema version; custom module version ranges; NuGet request adapter contract; explicit source-of-truth for provider settings; default identity/token posture; multi-tenant cache isolation; exact licensing/provenance acceptance requirements.
+**To decide before stable API release:** exact public module registration signatures; `Hoard.Abstractions` split threshold; capabilities schema version; custom module version ranges; NuGet request adapter contract; exact licensing/provenance acceptance requirements.
+
+**Settled 2026-10-31:** EF migrations are forward-only with an automatic pre-migration SQLite backup; registries are database-managed while provider selection is startup configuration; management is protected by a built-in admin token when network-exposed; multi-tenant cache isolation is a non-goal.
 
 This document is a decision framework, not generated source code or a guarantee that all future providers are implemented.

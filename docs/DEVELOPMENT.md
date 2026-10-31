@@ -19,8 +19,10 @@ flowchart LR
     Review --> Merge["Maintainer-authorized merge"]
 ```
 
-Use `feature/`, `bugfix/`, `chore/`, `docs/`, `refactor/`, `hotfix/`, or `test/`
-branch prefixes. Do not force-push shared history. Update the README and
+Spec work uses the branch Spec Kit creates (`NNN-short-name`), one PR per
+spec; the maintainer merges, and the merge commit is tagged
+`v0.0.N-alpha` ([Releasing](RELEASING.md)). Other work uses `feature/`,
+`bugfix/`, `chore/`, `docs/`, `refactor/`, `hotfix/`, or `test/` prefixes. Do not force-push shared history. Update the README and
 affected docs on the branch before merge. Keep credentials, state, tfvars,
 plans, build output, and runtime data out of Git; retain lockfiles.
 

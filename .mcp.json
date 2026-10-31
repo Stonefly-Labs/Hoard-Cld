@@ -2,55 +2,47 @@
   "mcpServers": {
     "Microsoft-Learn": {
       "type": "http",
-      "url": "https://learn.microsoft.com/api/mcp",
-      "tools": ["*"]
+      "url": "https://learn.microsoft.com/api/mcp"
     },
     "context7": {
       "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "tools": ["*"]
+      "url": "https://mcp.context7.com/mcp"
     },
     "next-devtools": {
-      "type": "local",
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@latest"],
       "env": {
         "NEXT_TELEMETRY_DISABLED": "1"
-      },
-      "tools": ["*"]
+      }
     },
     "shadcn": {
-      "type": "local",
+      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "shadcn@latest", "mcp"],
-      "tools": ["*"]
+      "args": ["-y", "shadcn@latest", "mcp"]
     },
     "playwright": {
-      "type": "local",
+      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@playwright/mcp@latest", "--isolated"],
-      "tools": ["*"]
+      "args": ["-y", "@playwright/mcp@latest", "--isolated"]
     },
     "azure-mcp": {
-      "type": "local",
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@azure/mcp@3.0.0", "server", "start", "--read-only"],
       "env": {
         "AZURE_MCP_COLLECT_TELEMETRY": "false"
-      },
-      "tools": ["*"]
+      }
     },
     "MCP_DOCKER": {
-      "type": "local",
+      "type": "stdio",
       "command": "docker",
-      "args": ["mcp", "gateway", "run"],
-      "tools": ["*"]
+      "args": ["mcp", "gateway", "run"]
     },
     "nuget": {
-      "type": "local",
+      "type": "stdio",
       "command": "dnx",
-      "args": ["NuGet.Mcp.Server", "--source", "https://api.nuget.org/v3/index.json", "--yes"],
-      "tools": ["*"]
+      "args": ["NuGet.Mcp.Server", "--source", "https://api.nuget.org/v3/index.json", "--yes"]
     }
   }
 }
