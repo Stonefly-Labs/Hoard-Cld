@@ -38,7 +38,7 @@ Dependency restoration repeatedly downloads the same public artifacts, wastes ba
 - Shared cache pipeline: request deduplication, atomic staging, revalidation, error handling, SSRF-safe upstream fetching.
 - Default disk cap with safe LRU eviction and garbage collection.
 - Registries stored in the metadata database and managed through the console and management API.
-- Built-in admin authentication: a bootstrap admin token protects the console and management API. Network-exposed package reads are anonymous only by explicit opt-in.
+- Built-in admin authentication: a bootstrap admin token protects the console and management API. Package reads from public registries are anonymous in the MVP (the content is public; rate limits bound abuse); per-registry read control arrives with package tokens.
 - Next.js App Router management console (shadcn/ui, Tailwind CSS, accessible components), statically exported and served by the .NET host: overview, package explorer, live request activity, registries, storage, settings, client setup snippets.
 - Distribution: Linux container (x64, arm64) plus self-contained executables for Linux, macOS (arm64) and Windows (x64).
 - GitHub Actions CI on every PR and CD from the first spec: container image to GHCR, binaries attached to GitHub Releases, packages to GitHub Packages.
@@ -68,7 +68,7 @@ Dependency restoration repeatedly downloads the same public artifacts, wastes ba
 | Runtime | Single executable/container | Single shared service initially |
 | UI | Same Next.js interface | Same Next.js interface |
 | Binding | Loopback by default | Explicit network exposure with authentication/TLS |
-| Read access | Local anonymous permitted | Anonymous by explicit opt-in in MVP; package tokens later |
+| Read access | Anonymous | Anonymous for public registries in MVP; package tokens later |
 | Management | Local-only by default | Built-in admin token; OIDC later |
 
 No feature paywalls, no separate codebase.

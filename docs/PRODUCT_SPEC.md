@@ -165,7 +165,7 @@ Restricted endpoints require the admin token whenever Hoard is bound to a non-lo
 - Bind only to loopback by default; explicit opt-in to `0.0.0.0`. The official container image opts in inside the container, so exposure on the host is governed by Docker port publishing (personal docs use `-p 127.0.0.1:8484:8484`).
 - UI management and registry read/write permissions are separate surfaces.
 - Team management endpoints are protected by the built-in admin token (generated on first run, shown once, stored hashed, rotatable) and HTTPS, either natively or via a TLS-terminating reverse proxy.
-- Anonymous network package reads are allowed only by explicit deployment opt-in. Scoped package tokens arrive with private feeds (post-MVP); OIDC console login is post-MVP.
+- Package reads from public registries are anonymous in the MVP, including when network-exposed; Hoard warns at startup when bound beyond loopback. Scoped package tokens (always required for private registries, optionally for public ones) arrive with private feeds post-MVP; OIDC console login is post-MVP.
 - Inbound rate limits bound requests per client and upstream fetch concurrency, so floods of unknown package names cannot amplify into upstream traffic.
 - Strict allowlist of upstream hosts; validate DNS resolution and redirects against private/link-local/metadata addresses. Avoid open-proxy behavior.
 - Enforce path and archive handling constraints, request limits, timeouts and upload/download byte caps where appropriate.
@@ -249,7 +249,7 @@ Package naming and public API names are proposed; fix via ADRs before publishing
 - 10 simultaneous identical fresh package requests issue one upstream artifact download per server instance.
 - Interrupted upstream transfer does not create a valid cache entry.
 - Verify sample `.nupkg` digest and provenance; manually evict then refetch it.
-- When bound to a non-loopback address, management API and console require the admin token; package reads are anonymous only if explicitly enabled.
+- When bound to a non-loopback address, management API and console require the admin token; package reads from public registries remain anonymous, so a default container install restores without extra configuration.
 - With the default disk cap reached, LRU eviction reclaims space without deleting a blob that is being served.
 - `dotnet restore` with default NuGet Audit settings completes without audit-source warnings.
 - UI presents real metrics, search/detail view, live activity, status and errors with accessible loading states.
