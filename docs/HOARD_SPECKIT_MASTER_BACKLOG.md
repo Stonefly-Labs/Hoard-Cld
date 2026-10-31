@@ -2,19 +2,13 @@
 
 **Status:** Revised v0.2 implementation inventory (2026-10-20) · **Product:** Hoard · **License:** MIT · **Source baseline:** Product Charter, Product Vision, Product Specification (2026-10-19)
 
-> **Purpose.** This is a master *feature specification* inventory and prompt library: the original 35 specs are preserved, with eight new architecture foundation specs (F-01–F-08). These are not already-created Spec Kit specifications. Each numbered entry is meant to become an independently reviewable `/speckit.specify` feature. Scope and priority are proposals that should be refined during implementation.
+> **Purpose.** This is a master *feature specification* inventory and prompt library: the original 35 specs are preserved, with eight new architecture foundation specs (F-01–F-08). These are not already-created Spec Kit specifications. Each numbered entry is meant to become an independently reviewable `/speckit-specify` feature. Scope and priority are proposals that should be refined during implementation.
 
 ## How to use this document
 
-**Checkpointed entry point:** Use the repository's `hoard-speckit` skill to run
-one stage per invocation. [Development workflow](DEVELOPMENT.md#checkpointed-spec-kit-flow)
-defines the order, review/merge gates, and recovery. The tracked
-`.specify/hoard-flow.json` records active/merged completion status; rows below
-remain the source of prompts and dependencies, not claims of delivered features.
-
 1. Initialize GitHub Spec Kit in the Hoard repository and create the project constitution **once**. Review the existing Hoard charter, vision, and product spec before generating features.
-2. Work in dependency order. Paste **one** prompt at a time into your coding agent using `/speckit.specify` (the block includes the command). Don't paste the entire backlog as a single feature.
-3. Review the generated spec and clarify unclear requirements before generating a plan and tasks. Use `/speckit.plan`, `/speckit.tasks`, `/speckit.implement` and quality gates as appropriate. `/speckit.specify` focuses on user outcomes, not implementation details. See [GitHub Spec Kit quickstart](https://github.com/github/spec-kit/blob/main/docs/quickstart.md).
+2. Work in dependency order. Paste **one** prompt at a time into your coding agent using `/speckit-specify` (the block includes the command). Don't paste the entire backlog as a single feature.
+3. Review the generated spec and clarify unclear requirements before generating a plan and tasks. Use `/speckit-plan`, `/speckit-tasks`, `/speckit-implement` and quality gates as appropriate. `/speckit-specify` focuses on user outcomes, not implementation details. See [GitHub Spec Kit quickstart](https://github.com/github/spec-kit/blob/main/docs/quickstart.md).
 4. Mark a spec completed only after its acceptance scenarios and appropriate real-client or fault-injection tests pass. Dependencies below refer to **capabilities ready for integration**, not necessarily entire feature rollout.
 5. Feature sequence numbers are logical backlog identifiers, not a guarantee of branch naming or release versions. Spec Kit manages active feature directories; don't rely on `git checkout` alone to select a feature.
 
@@ -34,7 +28,7 @@ remain the source of prompts and dependencies, not claims of delivered features.
 ## Suggested initial constitution prompt
 
 ```text
-/speckit.constitution Hoard is an MIT-licensed self-hosted pull-through package cache, with NuGet first, a lightweight SQLite/filesystem personal distribution, and secure team deployment. .NET 10 ASP.NET Core modular monolith with NuGet-distributed protocol/persistence/blob/identity providers, stable Hoard.Abstractions contracts, provider capabilities/descriptors, explicit module registration and startup validation. Hoard.Core must never reference concrete providers or EF Core; EF Core belongs inside relational persistence modules. Implement HTTP management features and ecosystem protocol endpoints as Vertical Slice Architecture (colocated DTOs, validation, handlers, endpoint registration and tests), while shared correctness concerns—cache keys/auth partitioning, freshness, SSRF policy, atomic verified blobs, streaming, single-flight concurrency, eviction and observability—remain centralized domain/platform services rather than replicated in slices. Built-in DI and Minimal APIs; no mandatory MediatR. Curated distribution uses config-driven activation; custom host references additional NuGet packages. No dynamic arbitrary plugin loading or hot replacement for MVP. Fail startup on invalid modules/versions; all providers pass common conformance tests and protocol adapters pass real-client end-to-end tests. Next.js App Router + Tailwind/shadcn/ui polished accessible statically exported UI served by .NET. Protect secrets, credentials and network boundary, preserve native protocols, provide reversible migrations and clear docs. Feature specifications emphasize user outcomes and acceptance criteria.
+/speckit-constitution Hoard is an MIT-licensed self-hosted pull-through package cache, with NuGet first, a lightweight SQLite/filesystem personal distribution, and secure team deployment. .NET 10 ASP.NET Core modular monolith with NuGet-distributed protocol/persistence/blob/identity providers, stable Hoard.Abstractions contracts, provider capabilities/descriptors, explicit module registration and startup validation. Hoard.Core must never reference concrete providers or EF Core; EF Core belongs inside relational persistence modules. Implement HTTP management features and ecosystem protocol endpoints as Vertical Slice Architecture (colocated DTOs, validation, handlers, endpoint registration and tests), while shared correctness concerns—cache keys/auth partitioning, freshness, SSRF policy, atomic verified blobs, streaming, single-flight concurrency, eviction and observability—remain centralized domain/platform services rather than replicated in slices. Built-in DI and Minimal APIs; no mandatory MediatR. Curated distribution uses config-driven activation; custom host references additional NuGet packages. No dynamic arbitrary plugin loading or hot replacement for MVP. Fail startup on invalid modules/versions; all providers pass common conformance tests and protocol adapters pass real-client end-to-end tests. Next.js App Router + Tailwind/shadcn/ui polished accessible statically exported UI served by .NET. Protect secrets, credentials and network boundary, preserve native protocols, provide reversible migrations and clear docs. Feature specifications emphasize user outcomes and acceptance criteria.
 ```
 
 ## Phase gates
@@ -111,7 +105,7 @@ All original 35 feature specifications and their prompts remain below. Their sha
 
 ## Foundational architecture specifications (new in v0.2)
 
-These are build-enabling implementation capabilities; preserve the original SPEC-01–35 numbering and avoid counting them as already implemented. Every prompt below may be sent independently to `/speckit.specify` after the constitution is established.
+These are build-enabling implementation capabilities; preserve the original SPEC-01–35 numbering and avoid counting them as already implemented. Every prompt below may be sent independently to `/speckit-specify` after the constitution is established.
 
 <a id="foundation-f-01"></a>
 ### F-01: Platform package boundaries and provider contracts
@@ -125,7 +119,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an open extensibility foundation for Hoard that allows independent package-manager, metadata, artifact storage and identity providers without modifying the caching engine. Include versioned contracts, clean package boundaries, a small custom-host experience, extensibility constraints and acceptance checks that prevent concrete-provider coupling.
+/speckit-specify Specify an open extensibility foundation for Hoard that allows independent package-manager, metadata, artifact storage and identity providers without modifying the caching engine. Include versioned contracts, clean package boundaries, a small custom-host experience, extensibility constraints and acceptance checks that prevent concrete-provider coupling.
 ```
 
 <a id="foundation-f-02"></a>
@@ -140,7 +134,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify how operators assemble Hoard from installed provider NuGet packages and activate selected modules at startup. Define safe module lifecycle, route registration, dependency resolution, readiness, enabled/disabled behavior, diagnostic errors, restart semantics and default-versus-custom distribution expectations.
+/speckit-specify Specify how operators assemble Hoard from installed provider NuGet packages and activate selected modules at startup. Define safe module lifecycle, route registration, dependency resolution, readiness, enabled/disabled behavior, diagnostic errors, restart semantics and default-versus-custom distribution expectations.
 ```
 
 <a id="foundation-f-03"></a>
@@ -155,7 +149,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify secure, intelligible configuration of installed Hoard modules, including enablement, provider selection, per-provider settings and secret references. Include precedence, invalid configurations, disabled modules, compatibility failures, safe migration, diagnostics and restart behavior.
+/speckit-specify Specify secure, intelligible configuration of installed Hoard modules, including enablement, provider selection, per-provider settings and secret references. Include precedence, invalid configurations, disabled modules, compatibility failures, safe migration, diagnostics and restart behavior.
 ```
 
 <a id="foundation-f-04"></a>
@@ -170,7 +164,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a management experience where users can inspect installed, enabled and healthy Hoard modules, what each supports, and why a capability is unavailable. Include secure API discovery, UI representation, actionable diagnostics and truthful feature advertisement.
+/speckit-specify Specify a management experience where users can inspect installed, enabled and healthy Hoard modules, what each supports, and why a capability is unavailable. Include secure API discovery, UI representation, actionable diagnostics and truthful feature advertisement.
 ```
 
 <a id="foundation-f-05"></a>
@@ -185,7 +179,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify interchangeable Hoard metadata persistence with identical correctness guarantees for registry state, cached entries, transactions, concurrent writes and schema upgrades. Include portability expectations, failure recovery, provider-specific implementation boundaries and measurable conformance.
+/speckit-specify Specify interchangeable Hoard metadata persistence with identical correctness guarantees for registry state, cached entries, transactions, concurrent writes and schema upgrades. Include portability expectations, failure recovery, provider-specific implementation boundaries and measurable conformance.
 ```
 
 <a id="foundation-f-06"></a>
@@ -200,7 +194,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify interchangeable Hoard artifact stores that stream large content, verify integrity and never expose incomplete blobs. Cover commit semantics, crash recovery, content addressing, deletion, provider capabilities and differences between filesystem and object storage.
+/speckit-specify Specify interchangeable Hoard artifact stores that stream large content, verify integrity and never expose incomplete blobs. Cover commit semantics, crash recovery, content addressing, deletion, provider capabilities and differences between filesystem and object storage.
 ```
 
 <a id="foundation-f-07"></a>
@@ -215,7 +209,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify repeatable contract and compatibility certification for Hoard modules: consistent provider semantics, lifecycle/startup failure validation, API/version mismatch handling, supported composition permutations, test templates for contributors and CI reporting.
+/speckit-specify Specify repeatable contract and compatibility certification for Hoard modules: consistent provider semantics, lifecycle/startup failure validation, API/version mismatch handling, supported composition permutations, test templates for contributors and CI reporting.
 ```
 
 <a id="foundation-f-08"></a>
@@ -230,7 +224,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify configurable Hoard authentication providers and standardized authorization for browser users and package-manager/CI clients. Cover OIDC/Entra, local/API tokens, identity mapping, coexistence, management-versus-package permissions, fail-closed behavior and provider compliance.
+/speckit-specify Specify configurable Hoard authentication providers and standardized authorization for browser users and package-manager/CI clients. Cover OIDC/Entra, local/API tokens, identity mapping, coexistence, management-versus-package permissions, fail-closed behavior and provider compliance.
 ```
 
 ## Detailed specifications and ready-to-use prompts
@@ -247,7 +241,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify As a developer or administrator, I want to start Hoard as a single local process or container and select personal or team deployment settings without switching products. Specify onboarding, valid configuration, startup behavior, health feedback, persisted configuration, unsafe-exposure prevention, and upgrade compatibility. Include first-run, restart, invalid-config, and network-exposure acceptance scenarios.
+/speckit-specify As a developer or administrator, I want to start Hoard as a single local process or container and select personal or team deployment settings without switching products. Specify onboarding, valid configuration, startup behavior, health feedback, persisted configuration, unsafe-exposure prevention, and upgrade compatibility. Include first-run, restart, invalid-config, and network-exposure acceptance scenarios.
 ```
 
 <a id="spec-02"></a>
@@ -262,7 +256,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify how Hoard users configure multiple named upstream registries, safely test connectivity, change or disable them, and see current status. Ensure public package requests can only use approved registry targets and that changes have predictable impact on cached entries and client URLs. Cover invalid URLs, duplicate IDs, unavailable endpoints, and safe error feedback.
+/speckit-specify Specify how Hoard users configure multiple named upstream registries, safely test connectivity, change or disable them, and see current status. Ensure public package requests can only use approved registry targets and that changes have predictable impact on cached entries and client URLs. Cover invalid URLs, duplicate IDs, unavailable endpoints, and safe error feedback.
 ```
 
 <a id="spec-03"></a>
@@ -277,7 +271,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify persistent metadata behavior for a self-hosted package cache that supports restarts, version upgrades, different upstream registries and multiple protocol request forms. Define consistency rules, safe migrations, data retention, backup/restore expectations, and failure scenarios, while keeping the personal installation dependency-free.
+/speckit-specify Specify persistent metadata behavior for a self-hosted package cache that supports restarts, version upgrades, different upstream registries and multiple protocol request forms. Define consistency rules, safe migrations, data retention, backup/restore expectations, and failure scenarios, while keeping the personal installation dependency-free.
 ```
 
 <a id="spec-04"></a>
@@ -292,7 +286,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify reliable local artifact storage where package downloads are staged, verified, atomically committed, shared across logical references when identical, and never served while incomplete. Define user-visible behavior on disk-full, interruption, corruption, duplicate content, deletion, and restart.
+/speckit-specify Specify reliable local artifact storage where package downloads are staged, verified, atomically committed, shared across logical references when identical, and never served while incomplete. Define user-visible behavior on disk-full, interruption, corruption, duplicate content, deletion, and restart.
 ```
 
 <a id="spec-05"></a>
@@ -307,7 +301,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify transparent pull-through caching behavior for native package managers: fresh hits, first misses, metadata refresh, conditional revalidation, negative results, redirects, errors, and stale entries. Preserve package-manager semantics and prevent serving one registrant or authorization variant to another. Cover response status, headers, freshness, and failure paths.
+/speckit-specify Specify transparent pull-through caching behavior for native package managers: fresh hits, first misses, metadata refresh, conditional revalidation, negative results, redirects, errors, and stale entries. Preserve package-manager semantics and prevent serving one registrant or authorization variant to another. Cover response status, headers, freshness, and failure paths.
 ```
 
 <a id="spec-06"></a>
@@ -322,7 +316,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify the experience when many developers or CI agents request the same uncached artifact at once. Hoard should avoid redundant upstream downloads, stream large files without excessive memory, safely handle disconnected clients, and report failures consistently. Include concurrency, cancellation, timeout and recovery acceptance tests.
+/speckit-specify Specify the experience when many developers or CI agents request the same uncached artifact at once. Hoard should avoid redundant upstream downloads, stream large files without excessive memory, safely handle disconnected clients, and report failures consistently. Include concurrency, cancellation, timeout and recovery acceptance tests.
 ```
 
 <a id="spec-07"></a>
@@ -337,7 +331,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a NuGet v3 pull-through cache usable as a standard NuGet source in NuGet.Config. Users must restore direct and transitive packages with unmodified dotnet tooling; discovery, version lookup and package downloading must remain routed through Hoard. Cover first restore, second restore, version normalization, bad versions, upstream outage, and unsupported resource behavior.
+/speckit-specify Specify a NuGet v3 pull-through cache usable as a standard NuGet source in NuGet.Config. Users must restore direct and transitive packages with unmodified dotnet tooling; discovery, version lookup and package downloading must remain routed through Hoard. Cover first restore, second restore, version normalization, bad versions, upstream outage, and unsupported resource behavior.
 ```
 
 <a id="spec-08"></a>
@@ -352,7 +346,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify complete NuGet consumption workflows beyond basic package downloads, including registration metadata, prerelease versions, version normalization, and common dotnet client commands. Define observable compatibility, supported and unsupported NuGet v3 capabilities, protocol response accuracy, and scenarios that prevent direct upstream bypass.
+/speckit-specify Specify complete NuGet consumption workflows beyond basic package downloads, including registration metadata, prerelease versions, version normalization, and common dotnet client commands. Define observable compatibility, supported and unsupported NuGet v3 capabilities, protocol response accuracy, and scenarios that prevent direct upstream bypass.
 ```
 
 <a id="spec-09"></a>
@@ -367,7 +361,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an automated compatibility and regression test experience using real package-manager clients and controlled test registries. For the first release prioritize dotnet restore and package-add flows. Tests must prove correct returned packages, expected upstream request counts, safe behavior during failures, and protocol conformance without relying exclusively on mocks.
+/speckit-specify Specify an automated compatibility and regression test experience using real package-manager clients and controlled test registries. For the first release prioritize dotnet restore and package-add flows. Tests must prove correct returned packages, expected upstream request counts, safe behavior during failures, and protocol conformance without relying exclusively on mocks.
 ```
 
 <a id="spec-10"></a>
@@ -382,7 +376,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a stable management API so Hoard users and the web console can inspect registry state, packages, cache performance, recent requests, setup instructions and maintenance actions. Define searchable/paginated behavior, clear error messages, permission boundaries and backward-compatible versioning expectations.
+/speckit-specify Specify a stable management API so Hoard users and the web console can inspect registry state, packages, cache performance, recent requests, setup instructions and maintenance actions. Define searchable/paginated behavior, clear error messages, permission boundaries and backward-compatible versioning expectations.
 ```
 
 <a id="spec-11"></a>
@@ -397,7 +391,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify the visual and interaction foundations for Hoard’s polished management console. Users should experience a distinctive modern developer tool, with cohesive dark and light themes, accessible navigation, responsive layouts, strong information hierarchy, and reliable loading/empty/error states. The default experience must run from a single Hoard server without needing a separate Node server.
+/speckit-specify Specify the visual and interaction foundations for Hoard’s polished management console. Users should experience a distinctive modern developer tool, with cohesive dark and light themes, accessible navigation, responsive layouts, strong information hierarchy, and reliable loading/empty/error states. The default experience must run from a single Hoard server without needing a separate Node server.
 ```
 
 <a id="spec-12"></a>
@@ -412,7 +406,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an operational dashboard that immediately shows whether Hoard is working and why it matters. Users can see cache hits/misses, stored bytes, fetched bandwidth, upstream health, recent requests, and search or filter cached packages by ecosystem, registry and version. Describe meaningful drilldowns and empty/error states.
+/speckit-specify Specify an operational dashboard that immediately shows whether Hoard is working and why it matters. Users can see cache hits/misses, stored bytes, fetched bandwidth, upstream health, recent requests, and search or filter cached packages by ecosystem, registry and version. Describe meaningful drilldowns and empty/error states.
 ```
 
 <a id="spec-13"></a>
@@ -427,7 +421,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a guided package-manager setup experience that helps a developer point standard tooling at Hoard without installing a special CLI. Start with NuGet and support additional ecosystems when available. Include OS-appropriate copyable snippets, configurable registry URLs, troubleshooting, success verification, and security warnings for team-hosted caches.
+/speckit-specify Specify a guided package-manager setup experience that helps a developer point standard tooling at Hoard without installing a special CLI. Start with NuGet and support additional ecosystems when available. Include OS-appropriate copyable snippets, configurable registry URLs, troubleshooting, success verification, and security warnings for team-hosted caches.
 ```
 
 <a id="spec-14"></a>
@@ -442,7 +436,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify installation and lifecycle experiences for individual developers and small teams: download/run or start a single Docker container, initialize persistent storage, reach the console, upgrade without data loss, and recover common errors. The default distribution must not require external PostgreSQL, Redis or a separate Next.js runtime.
+/speckit-specify Specify installation and lifecycle experiences for individual developers and small teams: download/run or start a single Docker container, initialize persistent storage, reach the console, upgrade without data loss, and recover common errors. The default distribution must not require external PostgreSQL, Redis or a separate Next.js runtime.
 ```
 
 <a id="spec-15"></a>
@@ -457,7 +451,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a native Go module proxy so developers can point GOPROXY at Hoard and use normal go build and go mod download commands. Support module version metadata and artifacts, correct path-escaping behavior, upstream outages and clear guidance on checksum verification and private modules.
+/speckit-specify Specify a native Go module proxy so developers can point GOPROXY at Hoard and use normal go build and go mod download commands. Support module version metadata and artifacts, correct path-escaping behavior, upstream outages and clear guidance on checksum verification and private modules.
 ```
 
 <a id="spec-16"></a>
@@ -472,7 +466,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a transparent Maven-compatible repository proxy so Maven users can configure Hoard as a mirror and restore ordinary dependencies, transitive POMs and plugin artifacts. Include releases versus mutable snapshots, metadata refresh, checksums, missing dependencies and offline behavior.
+/speckit-specify Specify a transparent Maven-compatible repository proxy so Maven users can configure Hoard as a mirror and restore ordinary dependencies, transitive POMs and plugin artifacts. Include releases versus mutable snapshots, metadata refresh, checksums, missing dependencies and offline behavior.
 ```
 
 <a id="spec-17"></a>
@@ -487,7 +481,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an npm-compatible pull-through registry consumed by ordinary npm commands. Developers should install scoped/unscoped and transitive dependencies through Hoard, with metadata and tarball links remaining local. Include npm ci, lockfiles, cache freshness, metadata variants, errors and upstream credential privacy.
+/speckit-specify Specify an npm-compatible pull-through registry consumed by ordinary npm commands. Developers should install scoped/unscoped and transitive dependencies through Hoard, with metadata and tarball links remaining local. Include npm ci, lockfiles, cache freshness, metadata variants, errors and upstream credential privacy.
 ```
 
 <a id="spec-18"></a>
@@ -502,7 +496,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify security protections for Hoard as a network-capable package proxy, including strictly approved upstream registries, safe redirects and address resolution, isolation of credentials, secure logs, denial of path traversal and prevention of unauthenticated management exposure. Define abuse-case tests and safe defaults for both deployment profiles.
+/speckit-specify Specify security protections for Hoard as a network-capable package proxy, including strictly approved upstream registries, safe redirects and address resolution, isolation of credentials, secure logs, denial of path traversal and prevention of unauthenticated management exposure. Define abuse-case tests and safe defaults for both deployment profiles.
 ```
 
 <a id="spec-19"></a>
@@ -517,7 +511,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify how Hoard protects a developer laptop or team server from unbounded cache growth. Users can see usage, set disk budgets and retention rules, preview eviction candidates, safely evict entries, and reclaim unreferenced blobs without harming active downloads or leaving corrupted metadata.
+/speckit-specify Specify how Hoard protects a developer laptop or team server from unbounded cache growth. Users can see usage, set disk budgets and retention rules, preview eviction candidates, safely evict entries, and reclaim unreferenced blobs without harming active downloads or leaving corrupted metadata.
 ```
 
 <a id="spec-20"></a>
@@ -532,7 +526,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify cache pinning so developers and CI teams can retain critical package versions even under normal eviction. Cover package/version and artifact selection, visibility of pinned storage, conflicts with quotas, unpinning, policy precedence, and corrupted or missing pinned content.
+/speckit-specify Specify cache pinning so developers and CI teams can retain critical package versions even under normal eviction. Cover package/version and artifact selection, visibility of pinned storage, conflicts with quotas, unpinning, policy precedence, and corrupted or missing pinned content.
 ```
 
 <a id="spec-21"></a>
@@ -547,7 +541,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify dependable offline and upstream-outage behavior for developers traveling or teams experiencing registry outages. Cached immutable artifacts should remain usable, stale metadata should follow explicit policy with visible warnings, and unavailable uncached versions must fail clearly. Cover manual offline toggle, reconnect and per-ecosystem nuances.
+/speckit-specify Specify dependable offline and upstream-outage behavior for developers traveling or teams experiencing registry outages. Cached immutable artifacts should remain usable, stale metadata should follow explicit policy with visible warnings, and unavailable uncached versions must fail clearly. Cover manual offline toggle, reconnect and per-ecosystem nuances.
 ```
 
 <a id="spec-22"></a>
@@ -562,7 +556,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a lockfile-driven cache warming experience: users supply standard dependency lockfiles and can preview, queue, follow, cancel and retry prefetches before CI or offline work. Support only verified ecosystems, preserve source and integrity data, avoid executing package scripts, and clearly report unsupported files and partial results.
+/speckit-specify Specify a lockfile-driven cache warming experience: users supply standard dependency lockfiles and can preview, queue, follow, cancel and retry prefetches before CI or offline work. Support only verified ecosystems, preserve source and integrity data, avoid executing package scripts, and clearly report unsupported files and partial results.
 ```
 
 <a id="spec-23"></a>
@@ -577,7 +571,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify high-quality cache observability so users can quantify bandwidth saved, hit rates, latency and reliability by ecosystem and registry and troubleshoot individual failed requests. Include time ranges, accurate calculation definitions, privacy controls, OpenTelemetry integration and low-cardinality metrics appropriate for a busy CI service.
+/speckit-specify Specify high-quality cache observability so users can quantify bandwidth saved, hit rates, latency and reliability by ecosystem and registry and troubleshoot individual failed requests. Include time ranges, accurate calculation definitions, privacy controls, OpenTelemetry integration and low-cardinality metrics appropriate for a busy CI service.
 ```
 
 <a id="spec-24"></a>
@@ -592,7 +586,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify safe shared-team operation where administrators sign in with an OIDC identity provider and package clients authenticate using scoped access tokens when required. Include role permissions, setup/bootstrap, token issuance and revocation, anonymous-read policies, lost-access recovery, and clear distinction between console and registry permissions.
+/speckit-specify Specify safe shared-team operation where administrators sign in with an OIDC identity provider and package clients authenticate using scoped access tokens when required. Include role permissions, setup/bootstrap, token issuance and revocation, anonymous-read policies, lost-access recovery, and clear distinction between console and registry permissions.
 ```
 
 <a id="spec-25"></a>
@@ -607,7 +601,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an operator audit history for security-relevant changes in Hoard, including registry configuration, access controls, cache eviction and pinning, offline mode and administrative jobs. Users must understand who changed what and when without exposing tokens, credentials or private URLs. Include retention and export needs.
+/speckit-specify Specify an operator audit history for security-relevant changes in Hoard, including registry configuration, access controls, cache eviction and pinning, offline mode and administrative jobs. Users must understand who changed what and when without exposing tokens, credentials or private URLs. Include retention and export needs.
 ```
 
 <a id="spec-26"></a>
@@ -622,7 +616,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify optional PostgreSQL persistence for team deployments while retaining a fully supported SQLite personal installation. Cover configuration, schema parity, migration/backup, failure recovery, integrity verification, and operator visibility; do not require PostgreSQL for ordinary installations.
+/speckit-specify Specify optional PostgreSQL persistence for team deployments while retaining a fully supported SQLite personal installation. Cover configuration, schema parity, migration/backup, failure recovery, integrity verification, and operator visibility; do not require PostgreSQL for ordinary installations.
 ```
 
 <a id="spec-27"></a>
@@ -637,7 +631,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify optional object-storage-backed artifact persistence for shared Hoard servers, initially S3-compatible stores and Azure Blob. Ensure integrity, deduplication, streaming and deletion remain equivalent to local disk despite different storage semantics. Cover credential setup, misconfiguration, outages and safe cleanup.
+/speckit-specify Specify optional object-storage-backed artifact persistence for shared Hoard servers, initially S3-compatible stores and Azure Blob. Ensure integrity, deduplication, streaming and deletion remain equivalent to local disk despite different storage semantics. Cover credential setup, misconfiguration, outages and safe cleanup.
 ```
 
 <a id="spec-28"></a>
@@ -652,7 +646,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a PyPI-compatible package cache consumed by unmodified pip. Users should browse and download versions using the Simple Repository API, with correctly normalized project names, artifact links and integrity hashes. Include HTML/JSON negotiation, wheels, sdists, transitive dependencies and authentication edge cases.
+/speckit-specify Specify a PyPI-compatible package cache consumed by unmodified pip. Users should browse and download versions using the Simple Repository API, with correctly normalized project names, artifact links and integrity hashes. Include HTML/JSON negotiation, wheels, sdists, transitive dependencies and authentication edge cases.
 ```
 
 <a id="spec-29"></a>
@@ -667,7 +661,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a Cargo sparse-registry pull-through cache that works with standard Rust tooling. Developers configure Cargo once and retrieve index entries and crate archives through Hoard, with no inadvertent upstream bypass. Include config.json endpoint mapping, checksum checks, offline runs and unsupported registry modes.
+/speckit-specify Specify a Cargo sparse-registry pull-through cache that works with standard Rust tooling. Developers configure Cargo once and retrieve index entries and crate archives through Hoard, with no inadvertent upstream bypass. Include config.json endpoint mapping, checksum checks, offline runs and unsupported registry modes.
 ```
 
 <a id="spec-30"></a>
@@ -682,7 +676,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify supply-chain safety controls that prevent immediate use of newly published package versions when a team enables a cooldown policy, and quarantine artifacts that fail integrity verification. Define clear policy scope, trusted time data limitations, informative client errors, review/override workflows and audit records.
+/speckit-specify Specify supply-chain safety controls that prevent immediate use of newly published package versions when a team enables a cooldown policy, and quarantine artifacts that fail integrity verification. Define clear policy scope, trusted time data limitations, informative client errors, review/override workflows and audit records.
 ```
 
 <a id="spec-31"></a>
@@ -697,7 +691,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify optional vulnerability visibility for cached packages with advisory sources, package/version matching, update status, severity and links to original reports. Operators should be able to understand potential exposure without blocking ordinary restores by default. Include stale feeds, missing data, false positives and privacy boundaries.
+/speckit-specify Specify optional vulnerability visibility for cached packages with advisory sources, package/version matching, update status, severity and links to original reports. Operators should be able to understand potential exposure without blocking ordinary restores by default. Include stale feeds, missing data, false positives and privacy boundaries.
 ```
 
 <a id="spec-32"></a>
@@ -712,7 +706,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify an easy CI onboarding experience where teams can configure existing runners to consume Hoard as their package registry proxy, verify traffic routes through the cache, securely handle tokens and optionally warm dependencies. Include examples for common CI systems, diagnostics and meaningful before/after measurements.
+/speckit-specify Specify an easy CI onboarding experience where teams can configure existing runners to consume Hoard as their package registry proxy, verify traffic routes through the cache, securely handle tokens and optionally warm dependencies. Include examples for common CI systems, diagnostics and meaningful before/after measurements.
 ```
 
 <a id="spec-33"></a>
@@ -727,7 +721,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify operational recovery tools for Hoard administrators to verify stored artifacts, detect corrupted or orphaned data, recover after an interrupted write, back up and restore metadata plus blobs and safely repair cache indexes. Include readable reports, dry-run operations and auditable destructive repair.
+/speckit-specify Specify operational recovery tools for Hoard administrators to verify stored artifacts, detect corrupted or orphaned data, recover after an interrupted write, back up and restore metadata plus blobs and safely repair cache indexes. Include readable reports, dry-run operations and auditable destructive repair.
 ```
 
 <a id="spec-34"></a>
@@ -742,7 +736,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify how organizations could run multiple Hoard server instances against shared persistence without duplicate conflicting writes or cache corruption. Include node failure, rolling upgrades, distributed locks, background job ownership, observable failover and operational boundaries; preserve single-instance simplicity.
+/speckit-specify Specify how organizations could run multiple Hoard server instances against shared persistence without duplicate conflicting writes or cache corruption. Include node failure, rolling upgrades, distributed locks, background job ownership, observable failover and operational boundaries; preserve single-instance simplicity.
 ```
 
 <a id="spec-35"></a>
@@ -757,7 +751,7 @@ These are build-enabling implementation capabilities; preserve the original SPEC
 **Paste into Spec Kit `specify`:**
 
 ```text
-/speckit.specify Specify a contributor-friendly MIT-licensed open-source project experience for Hoard: local build/test instructions, clear modules and adapter contracts, review expectations, issue and security reporting, versioned release notes, compatibility statements and repeatable release checks. Include a measurable new-contributor happy path.
+/speckit-specify Specify a contributor-friendly MIT-licensed open-source project experience for Hoard: local build/test instructions, clear modules and adapter contracts, review expectations, issue and security reporting, versioned release notes, compatibility statements and repeatable release checks. Include a measurable new-contributor happy path.
 ```
 
 ## Cross-cutting acceptance matrix
