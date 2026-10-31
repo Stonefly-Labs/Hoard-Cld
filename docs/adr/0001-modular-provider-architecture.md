@@ -33,6 +33,8 @@ Hoard must serve both tiny personal installations and centralized team deploymen
 
 **Costs:** Contract/version governance, startup validation and module registration scaffolding; more package/build/release test permutations; upfront focus on provider-neutral abstractions; strict tests to keep shared core and slices clean.
 
+**Sequencing (2026-10-31):** Boundaries and dependency rules apply from the first spec, but contracts are stabilized and conformance-qualified only when a second implementation exists. This prevents designing provider abstractions in the abstract before a working cache.
+
 **Trade-offs:** Config changes only activate providers already included in an image; adding a new NuGet package requires rebuilding/redeploying a custom host. No fully sandboxed plugin mechanism. Relational/NoSQL interchangeability is not promised merely by sharing an interface.
 
 ## Alternatives considered

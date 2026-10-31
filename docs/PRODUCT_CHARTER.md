@@ -1,6 +1,6 @@
 # Hoard — Product Charter
 
-**Status:** Draft v0.2 · **Revised:** 2026-10-20 · **Product name:** Hoard · **License:** MIT
+**Status:** Draft v0.3 · **Revised:** 2026-10-31 · **Product name:** Hoard · **License:** MIT
 
 ## 1. Purpose
 Build a lightweight, open-source, self-hosted, pull-through caching proxy for software package ecosystems. It should start effortlessly on a developer laptop yet function as a reliable shared service for development teams and CI/CD agents.
@@ -31,40 +31,45 @@ Dependency restoration repeatedly downloads the same public artifacts, wastes ba
 
 ## 6. Scope
 ### MVP (v0.1)
-- ASP.NET Core/.NET 10 **composable modular monolith**, with provider contracts, module descriptors, DI registration, startup validation, and built-in provider conformance testing.
+- **NuGet v3 only**, against public, unauthenticated upstreams (e.g. nuget.org). One upstream per registry.
+- ASP.NET Core/.NET 10 **composable modular monolith** with module boundaries enforced by architecture tests. Provider contracts are stabilized when a second implementation needs them, not before.
 - Feature-oriented Vertical Slice Architecture for management operations and protocol-specific endpoints; centralized shared caching engine for cross-cutting invariants.
-- Prebuilt curated distribution including NuGet, SQLite and filesystem providers; custom host compositions built from separately distributable NuGet modules.
-- **NuGet v3 first**, followed by Go GOPROXY, Maven, and npm adapters.
 - Filesystem content-addressed artifact storage; SQLite metadata.
-- Shared cache pipeline, request deduplication, atomic staging, cache revalidation, error handling, and basic eviction.
-- Next.js App Router management console with shadcn/ui, Tailwind CSS and accessible components.
-- Package explorer, service health, recent requests, hit/miss statistics, storage consumption, upstream configuration, client setup snippets.
-- Docker image and self-contained server distribution; management UI assets bundled for simple deployment.
-- Unit, protocol contract, and end-to-end tests using real package-manager clients.
+- Shared cache pipeline: request deduplication, atomic staging, revalidation, error handling, SSRF-safe upstream fetching.
+- Default disk cap with safe LRU eviction and garbage collection.
+- Registries stored in the metadata database and managed through the console and management API.
+- Built-in admin authentication: a bootstrap admin token protects the console and management API. Package reads from public registries are anonymous in the MVP (the content is public; rate limits bound abuse); per-registry read control arrives with package tokens.
+- Next.js App Router management console (shadcn/ui, Tailwind CSS, accessible components), statically exported and served by the .NET host: overview, package explorer, live request activity, registries, storage, settings, client setup snippets.
+- Distribution: Linux container (x64, arm64) plus self-contained executables for Linux, macOS (arm64) and Windows (x64).
+- GitHub Actions CI on every PR and CD from the first spec: container image to GHCR, binaries attached to GitHub Releases, packages to GitHub Packages.
+- Unit, protocol contract, and end-to-end tests using the real `dotnet` client; Playwright for the console.
 
 ### Subsequent releases
-- PyPI and Cargo adapters; PostgreSQL, S3-compatible storage and Azure Blob. SQL Server and MySQL providers may follow demand and conformance qualification; document-store support is investigational, not promised.
-- Community provider SDK/templates, capability-driven UI and explicit module compatibility/versioning policies.
-- Pinning, lockfile prefetch/warmup, offline mode, bandwidth savings analytics.
-- Team authentication (OIDC for console, tokens for package clients), audit trail, richer retention policies.
+- **Private and credentialed upstream feeds** (e.g. Azure Artifacts, GitHub Packages), with Hoard package tokens to control who may read private content and upstream credentials encrypted at rest.
+- Go GOPROXY, Maven and npm adapters; later PyPI and Cargo.
+- PostgreSQL (the second metadata implementation that proves the persistence contract), S3-compatible storage and Azure Blob. SQL Server and MySQL may follow demand; document-store support is investigational, not promised.
+- Multiple upstreams merged behind one registry, with dependency-confusion protections.
+- Team OIDC login for the console, audit trail, richer retention policies, pinning, lockfile prewarming, offline mode.
+- Publishing provider packages to nuget.org; community provider SDK/templates.
 - Multi-instance coordination and HA only after validating demand.
 
 ### Explicit non-goals for MVP
 - Hosting/publishing private packages; full artifact repository management.
 - Enterprise RBAC/SCIM, comprehensive vulnerability scoring, provenance certification.
+- Multi-tenant cache isolation within one instance.
 - Distributed caching/active-active replicas, air-gapped synchronization.
 - Custom **client-side** package-manager plugins or modifications to client software; dynamic loading or sandboxing of arbitrary third-party *server* modules. Independently compiled server provider packages are in scope.
 
 ## 7. Deployment profiles
 | Attribute | Personal | Team |
 |---|---|---|
-| DB | SQLite default | PostgreSQL recommended; SQLite supported for single-node |
+| DB | SQLite | SQLite (single node) in MVP; PostgreSQL later |
 | Blobs | Local filesystem | Persistent disk initially; object storage later |
 | Runtime | Single executable/container | Single shared service initially |
 | UI | Same Next.js interface | Same Next.js interface |
 | Binding | Loopback by default | Explicit network exposure with authentication/TLS |
-| Read access | Local anonymous permitted | Network-scoped or token-authenticated |
-| Management | Local-only by default | Authenticated, separated management endpoints |
+| Read access | Anonymous | Anonymous for public registries in MVP; package tokens later |
+| Management | Local-only by default | Built-in admin token; OIDC later |
 
 No feature paywalls, no separate codebase.
 
@@ -78,12 +83,12 @@ No feature paywalls, no separate codebase.
 - CI demonstrates adapter conformance, crash recovery, and regression coverage.
 
 ## 9. Milestones
-1. **Foundation:** Host, versioned provider contracts/module lifecycle, configuration, module conformance harness, metadata schema, content store, observability.
-2. **NuGet vertical slice:** Native `dotnet restore`, v3 service index rewriting, registration and flat-container routes, cache metrics.
-3. **Go and Maven:** Adapter contracts proven across different protocol styles.
-4. **npm and UI polish:** Metadata/tarball URL rewriting, polished dashboard, copy-paste setup guides.
-5. **Public beta:** Docker distribution, docs, load tests, security hardening, MIT licensing.
-6. **Expansion:** PyPI, Cargo, PostgreSQL and cloud storage.
+1. **Pipeline and skeleton:** Solution structure, architecture tests, CI/CD and per-spec releases from day one.
+2. **First cached restore:** Host, configuration, SQLite metadata, filesystem storage, cache engine and NuGet flat container, proven with a real cold/warm `dotnet restore`.
+3. **Complete NuGet and management:** Registration/audit/search coverage, management API with admin token, console-managed registries, quota and eviction.
+4. **Console:** Shell and design system, overview/packages/live activity, registries/storage/settings, setup assistant.
+5. **MVP release:** Multi-platform distribution, upgrade path, docs, security hardening.
+6. **Expansion:** Private feeds and package tokens, Go, Maven, npm, PostgreSQL, OIDC, then PyPI, Cargo and cloud storage.
 
 ## 10. Risks and mitigations
 - **Protocol divergence:** Versioned adapters and official-client integration suites.
@@ -102,10 +107,10 @@ No feature paywalls, no separate codebase.
 
 ## 12. Open decisions
 - Hoard repository namespace, domain availability, and trademark clearance (name chosen; clearance pending).
-- Whether authenticated team deployment is a beta launch requirement or post-MVP.
-- Artifact storage quotas / default eviction policy.
 - How offline/stale reads should behave per ecosystem.
-- Whether Next.js console remains static export only or supports an optional dedicated runtime.
+- Exact default disk cap value and eviction heuristics.
+
+Resolved 2026-10-31: MVP is NuGet-only with public upstreams; team mode uses built-in admin authentication in the MVP; a default disk cap with LRU eviction ships in the MVP; the bundled console is static export only.
 
 ## 13. Platform and implementation boundaries (v0.2 decision)
 - **Platform composition**: NuGet-distributed .NET providers supply protocols, metadata persistence, artifact storage, authentication, and later optional behaviors. A deployment enables installed providers through startup configuration.

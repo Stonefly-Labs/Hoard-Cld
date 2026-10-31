@@ -6,8 +6,6 @@
 *.cmd text eol=crlf
 *.md text diff=markdown
 *.svg text
-*.tf text
-*.hcl text
 *.png binary
 *.jpg binary
 *.jpeg binary
