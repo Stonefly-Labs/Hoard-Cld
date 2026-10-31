@@ -29,7 +29,7 @@ direct and transitive references to projects that do not exist yet (research R2,
 
 **Storage**: N/A
 
-**Testing**: `dotnet test Hoard.slnx` (architecture, host, release-guard tests); bash smoke scripts for packaged artifacts
+**Testing**: `dotnet test --solution Hoard.slnx` (architecture, host, release-guard tests); bash smoke scripts for packaged artifacts
 
 **Target Platform**: Executables for linux-x64, linux-arm64, osx-arm64, win-x64; container for linux/amd64 and linux/arm64
 
@@ -176,8 +176,11 @@ first spec that puts behavior in Core.
     smoke tests. No `dotnet` client or console checks yet.
 - `docs/DEVELOPMENT.md`: replace "No application code exists yet" with the build/test
   commands and the PR checks.
-- `CLAUDE.md`: a "Commands" section (`dotnet build Hoard.slnx`, `dotnet test Hoard.slnx`,
+- `CLAUDE.md`: a "Commands" section (`dotnet build Hoard.slnx`, `dotnet test --solution Hoard.slnx`,
   smoke scripts), which `drive-speckit`'s implement step expects.
+
+Deviation: tests run on Microsoft.Testing.Platform, so the command is
+`dotnet test --solution Hoard.slnx` (see the implementation notes in `tasks.md`).
 
 ## Risks and follow-ups
 

@@ -13,7 +13,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
 | — | Project constitution | Complete | constitution | — (merged in #3; no release tag) | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
-| 001 | Pipeline and solution skeleton | In progress | review | implement (review round 1 tasks T045–T052) | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
+| 001 | Pipeline and solution skeleton | In progress | implement | review (round 2) | feature/001-pipeline-skeleton | [#4](https://github.com/Stonefly-Labs/Hoard-Cld/pull/4) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -41,3 +41,4 @@ Rows for specs are added when they start. Status values: `Not started`,
 | 2026-10-31 | 001 | analyze | Blocker cleared: maintainer made the repository public (verified `gh repo view` → PUBLIC) |
 | 2026-10-31 | 001 | implement | 44/44 tasks; build 0 warnings, 34/34 tests; local smoke pass; PR #4 CI green (build-test, smoke, release.yml dry run on all 4 native runners + amd64/arm64 images, publish skipped); gate proven failing on 3faf8ad then reverted. Deviation: xUnit v3 4.x needs Microsoft.Testing.Platform, so `dotnet test --solution Hoard.slnx` and no VSTest packages |
 | 2026-10-31 | 001 | review | Round 1: converge clean (19/19 FRs, 5/5 SCs); build 0 warnings, 34/34 tests; PR #4 CI green. docs-grounding-auditor GROUNDED WITH NOTES (MAJOR: release packs Hoard.Core by name, not every packable project), architecture-boundary-reviewer PASS WITH NOTES, security-reviewer PASS WITH NOTES (6 plan security fixes verified). 8 tasks appended (T045–T052); 2 notes deferred to accept |
+| 2026-10-31 | 001 | implement | Review round 1 tasks T045–T052 done (52/52): release `verify` builds/tests/packs the solution in Release (packs only Hoard.Core today); skopeo from runner image, no apt-get; release.yml path filter widened; container smoke rejects `root:*`/`0:*` and adds hostile `--urls` run; DEVELOPMENT/RELEASING/plan corrected. Build 0 warnings, 34/34 tests (Debug and Release); binary smoke 4/4 and arm64 container smoke 3/3 locally |

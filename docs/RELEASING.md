@@ -46,8 +46,9 @@ Pushing a `v0.0.*-alpha` tag runs these jobs:
    runs the workflow as it exists at the tagged commit, so anyone with write access could
    tag a branch whose workflow skips the guard. Write access is the trust boundary.
 2. **Verify jobs**. They all must pass:
-   - **`verify`**: build, `dotnet test` (including the architecture rules) and
-     `dotnet pack` of the packable `Hoard.*` projects, with no version override.
+   - **`verify`**: a Release build, `dotnet test` (including the architecture rules) and
+     `dotnet pack` of the solution, which packs every packable `Hoard.*` project with no
+     version override.
    - **`binaries`**: one job per platform on its native runner (`linux-x64`
      `ubuntu-latest`, `linux-arm64` `ubuntu-24.04-arm`, `win-x64` `windows-latest`,
      `osx-arm64` `macos-latest`). Each publishes a self-contained single-file executable,
@@ -137,7 +138,8 @@ Every pull request to `main`, and every push to `main`, runs `ci.yml`:
 - **`smoke`**: publishes the `linux-x64` executable and builds an amd64 image from it,
   then runs both smoke scripts.
 
-Pull requests that change `release.yml`, `eng/**` or `deploy/**` also run the release
+Pull requests that change `release.yml`, `eng/**`, `deploy/**`, `global.json`,
+`Directory.*.props` or `src/**/*.csproj` also run the release
 workflow's verify jobs as a dry run (version `0.0.0-pr`, `publish` skipped). That covers
 every executable and both image architectures on native standard runners, which are free
 because the repository is public. A PR merges only when CI is green.

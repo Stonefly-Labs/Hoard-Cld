@@ -2,7 +2,8 @@
 # Smoke-tests a Hoard container image: non-root user; healthy on 127.0.0.1:8484 inside
 # the container within 30 s, 404 elsewhere; every listening socket on loopback; and
 # unreachable (connection refused) from a neighbouring container. Runs once with the base
-# image environment and once with a hostile environment asking for wider bindings.
+# image environment, once with a hostile environment and once with a hostile command line,
+# both asking for wider bindings.
 #
 #   eng/smoke/smoke-container.sh <image>
 set -euo pipefail
@@ -31,7 +32,7 @@ fail() {
 }
 
 user="$(docker image inspect -f '{{.Config.User}}' "$image")"
-[[ -n "$user" && "$user" != "root" && "${user%%:*}" != "0" ]] || fail "image user is '${user:-<unset>}', expected a non-root user"
+[[ -n "$user" && "${user%%:*}" != "root" && "${user%%:*}" != "0" ]] || fail "image user is '${user:-<unset>}', expected a non-root user"
 echo "smoke-container: image user is $user"
 
 docker network create "$network" > /dev/null
@@ -75,11 +76,16 @@ is_loopback() {
   esac
 }
 
+# smoke <run-name> [docker run options...] [-- image arguments...]
 smoke() {
   run_name="$1"
   shift
+  local options=() arguments=()
+  while [[ $# -gt 0 && "$1" != "--" ]]; do options+=("$1"); shift; done
+  [[ $# -gt 0 ]] && shift
+  arguments=("$@")
   cid="$(docker run -d --network "$network" --read-only --cap-drop ALL \
-    --security-opt no-new-privileges "$@" "$image")"
+    --security-opt no-new-privileges ${options[@]+"${options[@]}"} "$image" ${arguments[@]+"${arguments[@]}"})"
   containers+=("$cid")
 
   local report
@@ -112,5 +118,7 @@ smoke hostile-environment \
   -e DOTNET_URLS="http://0.0.0.0:8082" \
   -e ASPNETCORE_PREFERHOSTINGURLS="true" \
   -e Kestrel__Endpoints__H__Url="http://0.0.0.0:8485"
+
+smoke hostile-command-line -- --urls "http://0.0.0.0:8086"
 
 echo "smoke-container: all runs passed for $image"
