@@ -12,7 +12,7 @@ Steps: `constitution` (once) → per spec: `specify` → `clarify` → `plan` �
 
 | Spec | Title | Status | Last step | Next step | Branch | PR | Release |
 |---|---|---|---|---|---|---|---|
-| — | Project constitution | In progress | constitution | merge PR, then 001 specify | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
+| — | Project constitution | Accepted | constitution | maintainer merges #3, then 001 specify | chore/project-constitution | [#3](https://github.com/Stonefly-Labs/Hoard-Cld/pull/3) | — |
 
 Rows for specs are added when they start. Status values: `Not started`,
 `In progress`, `Blocked`, `Accepted` (awaiting merge), `Merged` (awaiting release),
@@ -22,10 +22,10 @@ Rows for specs are added when they start. Status values: `Not started`,
 
 | Date | Spec | Issue |
 |---|---|---|
-| 2026-10-31 | — | Constitution X (console MUST be static export, no Node runtime) conflicts with PRODUCT_SPEC §2 "Optional separate Next.js hosting may be introduced later". Maintainer to choose: qualify X as "bundled console" or drop the PRODUCT_SPEC sentence. |
 
 ## Log
 
 | Date | Spec | Step | Result |
 |---|---|---|---|
 | 2026-10-31 | — | constitution | v1.0.0 ratified from backlog prompt; docs-grounding-auditor GROUNDED WITH NOTES (MAJOR governance escape hatch fixed; invented stack-ADR rule removed; console/PRODUCT_SPEC conflict escalated) |
+| 2026-10-31 | — | constitution | Console conflict resolved by maintainer: keep Principle X absolute; removed "optional separate Next.js hosting" from PRODUCT_SPEC §2 |
