@@ -168,7 +168,7 @@ These extension methods are intended future Hoard APIs, not current packages.
 
 ## 8. Configuration and capability UX
 
-**Curated distribution:** Includes a documented package set; install/run once and select built-in provider choices in validated configuration. Selecting a provider that is not installed is an error; no automatic package downloads. Simple default uses SQLite + filesystem + NuGet on loopback. Team listeners require explicit TLS/auth posture.
+**Curated distribution:** Includes a documented package set; install/run once and select built-in provider choices in validated configuration. Selecting a provider that is not installed is an error; no automatic package downloads. Simple default uses SQLite + filesystem + NuGet on loopback. Team listeners require explicit TLS/auth posture: a non-loopback listener declares `https` (native, configured certificate) or `proxy` (TLS-terminating reverse proxy) or startup fails ([ADR-0002](adr/0002-explicit-tls-posture.md)); management requires the admin token.
 
 **Custom distribution:** Reference desired NuGet packages in a `.csproj`, register providers, publish a new binary/image, configure choices and restart. Build composition is explicit/reproducible.
 
@@ -216,6 +216,8 @@ Blob payloads belong in storage providers; metadata providers store references. 
 ## 13. ADRs and unresolved decisions
 
 **Accepted for design planning:** [ADR-0001: Composable modular monolith with vertical feature slices](adr/0001-modular-provider-architecture.md).
+
+**Accepted:** [ADR-0002: Explicit TLS posture for network-exposed listeners](adr/0002-explicit-tls-posture.md).
 
 **To decide before stable API release:** exact public module registration signatures; `Hoard.Abstractions` split threshold; capabilities schema version; custom module version ranges; NuGet request adapter contract; exact licensing/provenance acceptance requirements.
 

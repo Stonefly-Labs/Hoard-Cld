@@ -56,5 +56,6 @@ PR checks: `ci.yml` (`build-test`, `smoke`); pipeline changes also dry-run
   freshness, SSRF policy, verified atomic storage, single-flight, streaming and
   eviction safety live once in shared core services, never per slice.
 - Built-in DI and Minimal APIs; no MediatR.
-- Loopback by default; network exposure requires the admin token for
-  management. Never log secrets.
+- Loopback by default; network exposure requires a declared TLS posture
+  (`https` or `proxy`, ADR-0002) and the admin token for management. Never
+  log secrets.

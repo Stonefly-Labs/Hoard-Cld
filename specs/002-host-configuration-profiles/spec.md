@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "As a developer or operator, I want to start Hoard as a single process or container with a persistent data directory and get clear feedback about whether it started correctly. Configuration comes from command line over environment over file. Specify safe defaults: loopback only unless binding to other addresses is explicitly configured, with a clear warning that package reads are then anonymous; the official container image explicitly binds all interfaces inside the container so Docker port publishing works, and its documentation publishes the port to the host's loopback by default. Malformed or unknown options fail fast with actionable diagnostics and never fall back to insecure behavior. Distinguish liveness from readiness, define restart semantics and clean shutdown, and never log secrets. Include first-run, restart, invalid-config, explicit network-exposure and container scenarios. Out of scope for this spec: module registration or enable/disable machinery (no modules exist yet; it arrives with the first real module), storage and the management API."
+**Input**: User description: "As a developer or operator, I want to start Hoard as a single process or container with a persistent data directory and get clear feedback about whether it started correctly. Configuration comes from command line over environment over file. Specify safe defaults: loopback only unless binding to other addresses is explicitly configured, with a clear warning that package reads are then anonymous. Binding beyond loopback also requires an explicit TLS posture: Hoard serves HTTPS from a configured certificate, or the operator declares that a TLS-terminating reverse proxy is in front; otherwise startup fails, and an invalid certificate never falls back to plain HTTP. The official container image explicitly binds all interfaces inside the container, declaring the reverse-proxy posture, so Docker port publishing works, and its documentation publishes the port to the host's loopback by default. Malformed or unknown options fail fast with actionable diagnostics and never fall back to insecure behavior. Distinguish liveness from readiness, define restart semantics and clean shutdown, and never log secrets. Include first-run, restart, invalid-config, explicit network-exposure and container scenarios. Out of scope for this spec: module registration or enable/disable machinery (no modules exist yet; it arrives with the first real module), storage and the management API." (backlog prompt as amended by ADR-0002 during clarify)
 
 ## Clarifications
 
@@ -16,7 +16,7 @@
 - Q: How should Hoard's options be named in environment variables, on the command line and in the file, and how are non-Hoard settings handled? → A: One mechanical mapping — file `{"listen": {"port": 8484}}` ↔ env `HOARD_LISTEN__PORT` ↔ CLI `--listen:port 8484`; every `HOARD_*` variable, every `--` argument and every file key must be a known option or startup fails; other environment variables are not Hoard's and are ignored.
 - Q: Where should the native executable keep its data by default when no data directory is configured? → A: `./data`, relative to the working directory, resolved to an absolute path at startup.
 - Q: What paths should the liveness and readiness endpoints use, and what happens to spec 001's `GET /health`? → A: `/health/live` and `/health/ready`; `/health` is removed and returns 404.
-- Q: How should a team deployment get TLS, given this spec ships plain HTTP? → A: Plain HTTP for MVP; team TLS comes from a TLS-terminating reverse proxy that the docs explain; native TLS is post-MVP. To be recorded in an ADR aligning Architecture §8 and Charter §7.
+- Q: How should a team deployment get TLS (HTTPS)? → A: Declare it or refuse. A non-loopback listener requires an explicit TLS mode: `https` (Hoard serves HTTPS from a configured certificate) or `proxy` (a TLS-terminating reverse proxy is in front and Hoard serves plain HTTP); without one, startup fails. Loopback needs no mode. The container image sets `proxy` explicitly. Built in this spec; recorded in [ADR-0002](../../docs/adr/0002-explicit-tls-posture.md), which amends backlog 002 and aligns Architecture §8 and Charter §7. (Revised the same session from an earlier answer of "plain HTTP for MVP, native TLS post-MVP".)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -85,31 +85,45 @@ port was opened, and that the message names the option, its source and the fix.
    Hoard starts, **Then** it exits non-zero naming the missing file.
 6. **Given** the configured port is already in use, **When** Hoard starts, **Then** it exits
    non-zero with a message naming the address and port.
+7. **Given** TLS mode `https` with no certificate, a missing or unreadable certificate file, a
+   wrong password, a certificate without a usable private key, or an expired certificate,
+   **When** Hoard starts, **Then** it exits non-zero naming the certificate option and the problem,
+   never falling back to plain HTTP; **Given** certificate options with TLS mode `proxy` or no
+   mode, **Then** it exits non-zero naming the contradiction.
 
 ---
 
 ### User Story 3 - Explicit network exposure with a warning (Priority: P1)
 
 An operator wants teammates to reach Hoard and configures it to listen on all interfaces (or a
-specific non-loopback address). Hoard does so, and its startup output carries a prominent warning
-that it is reachable from the network and that package reads are anonymous.
+specific non-loopback address). They must also say how traffic is encrypted: either Hoard serves
+HTTPS from a certificate they provide, or they declare that a TLS-terminating reverse proxy sits in
+front. Without that declaration Hoard refuses to start. Once exposed, its startup output carries
+a prominent warning that it is reachable from the network and that package reads are anonymous.
 
 **Why this priority**: The team profile depends on deliberate exposure, and the docs require the
-warning (Product spec §8; backlog 002 acceptance focus).
+warning and an explicit TLS posture (Product spec §8; backlog 002 acceptance focus;
+[ADR-0002](../../docs/adr/0002-explicit-tls-posture.md)).
 
-**Independent Test**: Start Hoard with a non-loopback listen address; confirm it is reachable on
-that address and the warning appears exactly when the address is not loopback.
+**Independent Test**: Start Hoard with a non-loopback listen address and no TLS mode (refused),
+then with each TLS mode; confirm it is reachable on that address over the declared protocol and
+the warning appears exactly when the address is not loopback.
 
 **Acceptance Scenarios**:
 
-1. **Given** a listen address of all interfaces, set through any of the three configuration
-   sources, **When** Hoard starts, **Then** it listens on that address and logs a warning that it
-   is network-exposed and package reads are anonymous.
-2. **Given** a specific non-loopback address, **When** Hoard starts, **Then** the same warning is
-   logged.
-3. **Given** a loopback address (IPv4 or IPv6), **When** Hoard starts, **Then** no exposure
-   warning is logged.
-4. **Given** the same option set in the file, the environment and on the command line with
+1. **Given** a non-loopback listen address and no TLS mode, **When** Hoard starts, **Then** it
+   exits non-zero without opening a port and names the two TLS modes as the fix.
+2. **Given** a listen address of all interfaces and TLS mode `proxy`, set through any of the
+   three configuration sources, **When** Hoard starts, **Then** it serves plain HTTP on that
+   address and logs a warning that it is network-exposed, that package reads are anonymous, and
+   that it relies on a reverse proxy for TLS.
+3. **Given** a specific non-loopback address, TLS mode `https` and a valid certificate, **When**
+   Hoard starts, **Then** it serves HTTPS only on that address with that certificate, refuses
+   plain HTTP on that port, and logs the network-exposure and anonymous-reads warning.
+4. **Given** a loopback address (IPv4 or IPv6) with no TLS mode, **When** Hoard starts, **Then**
+   it serves plain HTTP and no exposure warning is logged; TLS mode `https` or `proxy` is also
+   accepted on loopback (e.g. a reverse proxy on the same host).
+5. **Given** the same option set in the file, the environment and on the command line with
    different values, **When** Hoard starts, **Then** the command-line value wins over the
    environment, which wins over the file, and the startup summary shows the effective value and
    its source.
@@ -121,7 +135,8 @@ that address and the warning appears exactly when the address is not loopback.
 A personal user runs the official image with a persistent volume and publishes the port to their
 machine's loopback (`-p 127.0.0.1:8484:8484`), as the documentation shows. Hoard is reachable
 from their machine at `http://127.0.0.1:8484`. Inside the container Hoard listens on all
-interfaces, and the startup output carries the exposure warning, which the documentation explains.
+interfaces with TLS mode `proxy` set by the image, and the startup output carries the exposure
+warning, which the documentation explains.
 
 **Why this priority**: The container is a primary distribution (Charter §7). Spec 001's image is
 not reachable from the host; this makes it usable.
@@ -132,7 +147,8 @@ health endpoints from the host; restart the container and confirm the data direc
 **Acceptance Scenarios**:
 
 1. **Given** the official image, **When** it starts without extra configuration, **Then** Hoard
-   listens on all interfaces inside the container on port 8484 and logs the exposure warning.
+   listens on all interfaces inside the container on port 8484 with TLS mode `proxy`, serves
+   plain HTTP, and logs the exposure warning.
 2. **Given** the documented run command publishing to the host's loopback, **When** the user
    requests the health endpoints from the host, **Then** they answer.
 3. **Given** a volume mounted at the image's data directory, **When** the container is removed
@@ -142,6 +158,8 @@ health endpoints from the host; restart the container and confirm the data direc
    ordinary configured value.
 5. **Given** the image, **When** it runs, **Then** Hoard runs as a non-root user (unchanged from
    spec 001) and the data directory is writable by that user.
+6. **Given** the image with TLS mode `https` and a certificate mounted into the container,
+   **When** it starts, **Then** it serves HTTPS on 8484 with that certificate.
 
 ---
 
@@ -198,8 +216,15 @@ signal with a request in flight; restart and compare.
   processes sharing one data directory on different ports are not prevented in this spec, which
   stores nothing there yet.
 - A stop signal arrives during startup: Hoard exits without serving and without a crash trace.
-- A configuration value that holds a secret would never be echoed back; no option in this spec
-  is a secret, and diagnostics never print the full environment or command line.
+- The certificate password is a secret: it is never echoed in diagnostics or the summary, and a
+  wrong password is reported as "certificate could not be opened" without the value.
+  Diagnostics never print the full environment or command line.
+- A certificate that is not yet valid, expires while Hoard runs, or does not match the host name
+  clients use: not-yet-valid fails startup like an expired one; expiry during a run and host-name
+  mismatch are not checked (clients report them); replacing a certificate requires a restart in
+  this spec.
+- TLS mode `proxy` is a declaration Hoard cannot verify; Hoard does not check that a proxy exists
+  and does not read forwarded headers in this spec.
 
 ## Requirements *(mandatory)*
 
@@ -211,9 +236,9 @@ signal with a request in flight; restart and compare.
   environment > configuration file (Product spec §10), and MUST show each effective option's
   source in the startup summary.
 - **FR-002**: The options in this spec are only those with a consumer here: the listen endpoint
-  (address and port, named per FR-008), the data
-  directory, and the configuration file location. No other Hoard
-  option exists yet (Constitution V).
+  (address and port, named per FR-008), the listener's TLS mode and certificate (FR-027–FR-029),
+  the data directory, and the configuration file location. No other Hoard option exists yet
+  (Constitution V).
 - **FR-003**: Only Hoard's own options MAY change the listener. Framework-level settings from any
   source (e.g. web-framework URL or endpoint variables) MUST NOT add, widen or change a listener,
   preserving spec 001's guarantee.
@@ -242,20 +267,34 @@ signal with a request in flight; restart and compare.
 
 - **FR-009**: With no listen address configured, Hoard MUST listen on loopback only, port 8484
   (Constitution III; Product spec §8).
-- **FR-010**: Hoard MUST listen on a non-loopback address only when one is explicitly configured,
-  and MUST then log a warning at startup that it is network-exposed and that package reads are
-  anonymous (Product spec §8). The warning MUST NOT appear for loopback addresses.
+- **FR-010**: Hoard MUST listen on a non-loopback address only when one is explicitly configured
+  together with a TLS mode (FR-027), and MUST then log a warning at startup that it is
+  network-exposed and that package reads are anonymous (Product spec §8); in `proxy` mode the
+  warning also states that Hoard serves plain HTTP and relies on the reverse proxy for TLS. The
+  warning MUST NOT appear for loopback addresses.
 - **FR-011**: The listen address MUST be an IP address (IPv4 or IPv6), an all-interfaces
   address (`0.0.0.0` for IPv4, `::` for IPv6 and IPv4 where the platform supports dual-stack), or
   `localhost`; any other value is malformed.
 - **FR-012**: The official container image MUST configure Hoard to listen on all interfaces inside
-  the container using Hoard's own listen option, so host exposure is governed by Docker port
-  publishing (Product spec §8). An operator MUST be able to override it with any configuration
+  the container with TLS mode `proxy`, using Hoard's own options, so host exposure is governed by
+  Docker port publishing (Product spec §8). An operator MUST be able to override it with any configuration
   source that ranks at or above the one the image uses, and the documentation MUST say which
   sources those are.
 - **FR-013**: Documentation for the container MUST publish the port to the host's loopback by
   default (`-p 127.0.0.1:8484:8484`) and explain that publishing without an address exposes Hoard
-  on every host interface.
+  on every host interface, and that a network-exposed container needs either a TLS-terminating
+  reverse proxy in front or TLS mode `https` with a mounted certificate.
+
+- **FR-027**: The listener's TLS mode is `https` or `proxy`. It MUST be set whenever the listen
+  address is not loopback; a non-loopback address without it MUST fail startup (FR-006) naming
+  both modes. On loopback it is optional; unset means plain HTTP.
+- **FR-028**: In `https` mode Hoard MUST serve HTTPS only (no plain-HTTP listener) using the
+  configured certificate: a PEM or PKCS#12 (PFX) file, with a separate PEM key file and a password
+  where the format needs them. A missing certificate, an unreadable file, a wrong password, a
+  certificate without a usable private key, or a certificate outside its validity period MUST
+  fail startup naming the option and problem, never falling back to plain HTTP (FR-007).
+- **FR-029**: In `proxy` mode Hoard serves plain HTTP on the configured address. Certificate
+  options set together with `proxy` or without a TLS mode MUST fail startup as contradictory.
 
 **Data directory**
 
@@ -287,7 +326,8 @@ signal with a request in flight; restart and compare.
 **Startup feedback, shutdown and logging**
 
 - **FR-021**: On successful start Hoard MUST log a concise summary: version, effective listen
-  address and port, absolute data directory and whether it was created, and the configuration
+  address, port and scheme (with the TLS mode and, for `https`, the certificate's subject and
+  expiry date), absolute data directory and whether it was created, and the configuration
   sources used (including the file path, if any).
 - **FR-022**: On a stop signal Hoard MUST report not ready, stop accepting new requests, allow
   in-flight requests to complete within a bounded shutdown timeout, log that it stopped, and exit
@@ -296,26 +336,29 @@ signal with a request in flight; restart and compare.
   listen address and data directory; nothing in this spec requires recovery after an abrupt kill.
 - **FR-024**: Hoard MUST NEVER log secrets (Constitution III): diagnostics and the summary MUST NOT
   print the full environment, the full command line, or the raw configuration file, and only
-  report the values of options defined in FR-002.
+  report the values of options defined in FR-002. The certificate password is a secret and MUST
+  never be printed.
 
 **Verification and documentation**
 
 - **FR-025**: The native-executable smoke test MUST keep proving loopback-only by default and
   under hostile framework settings (FR-003), and MUST add an explicit-exposure run showing the
-  warning. The container smoke test MUST change from "unreachable from a neighbouring container"
+  warning and a run proving a non-loopback address without a TLS mode is refused. The container smoke test MUST change from "unreachable from a neighbouring container"
   to "reachable through the bridge on 8484 with the exposure warning logged", MUST keep the
   non-root checks, and MUST keep proving that framework settings add no listener or port beyond
   the configured one.
 - **FR-026**: The README, `docs/DEVELOPMENT.md`, the smoke-script descriptions in `CLAUDE.md`'s
   Commands section, and the release notes' working/planned section
-  MUST describe the shipped options, defaults, precedence, health endpoints, the container run
-  command with loopback port publishing and a volume, and the exposure warning; the README MUST
+  MUST describe the shipped options, defaults, precedence, health endpoints, the TLS modes and
+  certificate options, the container run command with loopback port publishing and a volume, and
+  the exposure warning; the README MUST
   stop saying the container is unreachable from the host.
 
 ### Key Entities
 
-- **Hoard options**: listen address, listen port, data directory, configuration file location;
-  each with an effective value and the source it came from.
+- **Hoard options**: listen address, listen port, TLS mode, certificate path, certificate key
+  path, certificate password (secret), data directory, configuration file location; each with an
+  effective value and the source it came from.
 - **Data directory**: one persistent directory per Hoard instance; empty in this spec apart from
   the write check.
 
@@ -333,22 +376,25 @@ signal with a request in flight; restart and compare.
 - **SC-003**: Across all tested precedence combinations (each option set in two or three sources),
   the effective value always comes from the highest-precedence source.
 - **SC-004**: The exposure warning appears in 100% of tested non-loopback runs and 0% of loopback
-  runs.
+  runs, and 100% of tested non-loopback runs without a TLS mode are refused before opening a port.
+- **SC-008**: Every tested invalid-certificate case (FR-028) exits non-zero without opening a
+  port, and a valid certificate in `https` mode completes a TLS handshake while a plain-HTTP
+  request to the same port does not get a normal response.
 - **SC-005**: A user following the README's container instructions reaches Hoard's health
   endpoint from their machine on the first attempt, with the port published to loopback only.
 - **SC-006**: On a stop signal Hoard exits with code 0 within 10 seconds while an in-flight
   request completes, and a restart reuses the same data directory.
 - **SC-007**: No test run's captured output contains a value planted as a secret in the
-  environment or on the command line.
+  environment, on the command line or as the certificate password.
 
 ## Assumptions
 
-- Hoard speaks plain HTTP, and does so for the whole MVP (Clarifications 2026-10-31). A team
-  deployment that needs HTTPS puts a TLS-terminating reverse proxy in front of Hoard; native TLS
-  is post-MVP. This decision is recorded in an ADR that aligns Architecture §8 ("team listeners
-  require explicit TLS/auth posture") and Charter §7; the admin token (spec 010) covers the auth
-  half. This spec's documentation only states that Hoard serves plain HTTP; reverse-proxy
-  guidance belongs with the network-exposure docs once management exists.
+- TLS posture (Clarifications 2026-10-31): this spec delivers the TLS half of Architecture §8's
+  "team listeners require explicit TLS/auth posture" and Charter §7's "explicit network exposure
+  with authentication/TLS"; the admin token (spec 010) delivers the auth half. The decision is
+  recorded in [ADR-0002](../../docs/adr/0002-explicit-tls-posture.md), which amends backlog 002's
+  acceptance focus and prompt. Automatic certificates (e.g. ACME)
+  and certificate hot-reload are not part of it.
 - One listen address and one port per instance; listening on several addresses at once is not
   needed for this spec's acceptance.
 - No management surface exists, so network exposure does not yet require the admin token; the

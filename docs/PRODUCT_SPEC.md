@@ -163,8 +163,9 @@ Restricted endpoints require the admin token whenever Hoard is bound to a non-lo
 
 ## 8. Security and isolation
 - Bind only to loopback by default; explicit opt-in to `0.0.0.0`. The official container image opts in inside the container, so exposure on the host is governed by Docker port publishing (personal docs use `-p 127.0.0.1:8484:8484`).
+- Binding beyond loopback requires an explicit TLS posture or startup fails: `https` (Hoard serves HTTPS only, from a configured certificate; an invalid certificate never falls back to plain HTTP) or `proxy` (a TLS-terminating reverse proxy is in front). The container image declares `proxy`. See [ADR-0002](adr/0002-explicit-tls-posture.md).
 - UI management and registry read/write permissions are separate surfaces.
-- Team management endpoints are protected by the built-in admin token (generated on first run, shown once, stored hashed, rotatable) and HTTPS, either natively or via a TLS-terminating reverse proxy.
+- Team management endpoints are protected by the built-in admin token (generated on first run, shown once, stored hashed, rotatable) and HTTPS, either natively or via a TLS-terminating reverse proxy, per the listener's declared TLS posture.
 - Package reads from public registries are anonymous in the MVP, including when network-exposed; Hoard warns at startup when bound beyond loopback. Scoped package tokens (always required for private registries, optionally for public ones) arrive with private feeds post-MVP; OIDC console login is post-MVP.
 - Inbound rate limits bound requests per client and upstream fetch concurrency, so floods of unknown package names cannot amplify into upstream traffic.
 - Strict allowlist of upstream hosts; validate DNS resolution and redirects against private/link-local/metadata addresses. Avoid open-proxy behavior.
@@ -272,7 +273,7 @@ See [RELEASING.md](RELEASING.md) for versioning and tags.
 2. NuGet search (`SearchQueryService`) and autocomplete: MVP or later (decide in the NuGet coverage spec).
 3. Cache freshness defaults by endpoint and ecosystem; exact default disk cap.
 
-Resolved 2026-10-31: non-loopback binding requires the built-in admin token for management; MVP is public upstreams only with one upstream per registry (private feeds and merging are post-MVP); the team release gate is built-in admin auth; the bundled console is static export only; MVP platforms are Linux container (x64, arm64), Linux, macOS (arm64) and Windows (x64) executables.
+Resolved 2026-10-31: non-loopback binding requires the built-in admin token for management; MVP is public upstreams only with one upstream per registry (private feeds and merging are post-MVP); the team release gate is built-in admin auth; network-exposed listeners require a declared TLS posture (native HTTPS or reverse proxy, ADR-0002); the bundled console is static export only; MVP platforms are Linux container (x64, arm64), Linux, macOS (arm64) and Windows (x64) executables.
 
 ## 15. References
 - Next.js release news: https://nextjs.org/blog

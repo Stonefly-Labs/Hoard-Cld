@@ -48,8 +48,9 @@ The intended product. None of this ships yet; see the status above.
   Cargo follow.
 - **One product, two profiles.** A personal install is a single container or
   executable bound to loopback, with SQLite and local disk and nothing else to
-  run. A team install is the same binary exposed on the network with
-  built-in admin authentication.
+  run. A team install is the same binary exposed on the network with an
+  explicit TLS posture (native HTTPS or a reverse proxy) and built-in admin
+  authentication.
 - **Trustworthy bytes.** Downloads are staged, checksum-verified and atomically
   committed; partial or corrupt content is never served as a hit.
 - **A polished console.** A Next.js management UI, served by the Hoard process
@@ -107,6 +108,7 @@ dotnet run --project src/Hoard.Host     # http://127.0.0.1:8484/health
 | [Product specification](docs/PRODUCT_SPEC.md) | Cache lifecycle, protocols, API, UI and security requirements |
 | [Architecture](docs/ARCHITECTURE.md) | Modular monolith, provider categories, dependency rules |
 | [ADR-0001](docs/adr/0001-modular-provider-architecture.md) | Composable modular monolith with vertical slices |
+| [ADR-0002](docs/adr/0002-explicit-tls-posture.md) | Explicit TLS posture for network-exposed listeners |
 | [Spec backlog](docs/HOARD_SPECKIT_MASTER_BACKLOG.md) | Ordered feature specifications and Spec Kit prompts |
 | [Spec progress](docs/spec-progress.md) | Where each spec stands |
 | [Development](docs/DEVELOPMENT.md) | Change flow and contributor tooling |
