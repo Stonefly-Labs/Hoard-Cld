@@ -37,6 +37,7 @@ Hoard is a cache, not a private package registry or publishing platform.
 | [Architecture](docs/ARCHITECTURE.md) | Modular monolith, provider categories, dependency rules |
 | [ADR-0001](docs/adr/0001-modular-provider-architecture.md) | Composable modular monolith with vertical slices |
 | [Spec backlog](docs/HOARD_SPECKIT_MASTER_BACKLOG.md) | Ordered feature specifications and Spec Kit prompts |
+| [Spec progress](docs/spec-progress.md) | Where each spec stands |
 | [Development](docs/DEVELOPMENT.md) | Change flow and contributor tooling |
 | [Releasing](docs/RELEASING.md) | Versioning, tags and published artifacts |
 

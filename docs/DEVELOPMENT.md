@@ -19,9 +19,10 @@ flowchart LR
     Review --> Merge["Maintainer-authorized merge"]
 ```
 
-Spec work uses the branch Spec Kit creates (`NNN-short-name`), one PR per
-spec; the maintainer merges, and the merge commit is tagged
-`v0.0.N-alpha` ([Releasing](RELEASING.md)). Other work uses `feature/`,
+Spec work is driven by the `drive-speckit` skill on a `feature/NNN-<slug>`
+branch (`NNN` = backlog spec number), one PR per spec; progress lives in
+[spec-progress.md](spec-progress.md). The maintainer merges, and the merge
+commit is tagged `v0.0.N-alpha` ([Releasing](RELEASING.md)). Other work uses `feature/`,
 `bugfix/`, `chore/`, `docs/`, `refactor/`, `hotfix/`, or `test/` prefixes. Do not force-push shared history. Update the README and
 affected docs on the branch before merge. Keep credentials, state, tfvars,
 plans, build output, and runtime data out of Git; retain lockfiles.
