@@ -238,9 +238,9 @@ Package naming and public API names are proposed; fix via ADRs before publishing
 ## 12. Acceptance criteria — v0.1 NuGet slice
 - Core builds/tests without referencing concrete protocol, database, storage or identity implementations.
 - An official distribution starts with NuGet + SQLite + filesystem selected by configuration; disabling an optional protocol does not leave its routes active.
-- Unsupported module IDs, collisions, missing dependencies and compatibility conflicts yield actionable startup failure; capabilities endpoint accurately lists enabled/available providers.
+- Unsupported module IDs and invalid module configuration yield actionable startup failure; disabled modules expose no routes. (Capability discovery is post-MVP, once a second module exists.)
 - Management and protocol endpoints are feature-oriented slices; shared cache invariants and provider contracts are centralized.
-- Every built provider passes its category conformance suite, including crash/failure cases; at least one custom host composition builds successfully.
+- Every built provider passes its behavior tests, including crash/failure cases. Shared category conformance suites and a custom host composition arrive with the second implementations (post-MVP).
 - From a clean environment, install/start one container with persistent volume and no external DB.
 - `/` serves the polished management console; health endpoint reflects initialization and disk/database readiness.
 - NuGet v3 source configuration points exclusively to local proxy discovery/resource endpoints.

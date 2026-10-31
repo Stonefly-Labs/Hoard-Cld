@@ -16,7 +16,7 @@ v0.0.<N>-alpha      N = the spec's numeric directory prefix, without leading zer
 | Spec directory | Tag |
 | --- | --- |
 | `specs/001-pipeline-skeleton` | `v0.0.1-alpha` |
-| `specs/012-console-activity` | `v0.0.12-alpha` |
+| `specs/016-live-activity` | `v0.0.16-alpha` |
 
 Tags are annotated, must point at a commit reachable from `main`, and are never
 moved or recreated. A bad release is corrected with a new version. The MVP

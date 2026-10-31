@@ -174,7 +174,7 @@ These extension methods are intended future Hoard APIs, not current packages.
 
 **Registries:** Registry definitions are runtime data in the metadata database, managed through the management API and console; startup configuration may seed them on first run only. Provider/module selection stays in startup configuration and requires restart.
 
-**Management API:** Expose installed/available/active provider lists, descriptive capabilities, versions, health and sanitized config definitions, behind appropriate management access. The Next.js interface only offers actions declared as supported; it must not mistake "installed" for "enabled" or "healthy".
+**Management API (post-MVP, with the second module):** Expose installed/available/active provider lists, descriptive capabilities, versions, health and sanitized config definitions, behind appropriate management access. The Next.js interface only offers actions declared as supported; it must not mistake "installed" for "enabled" or "healthy".
 
 **Configurations:** Define CLI/environment/file precedence; support reference-based secrets; validator catches unknown IDs, incompatible modules, missing required capabilities and wrong cardinality; version configs and document migration. Never log raw credentials.
 
