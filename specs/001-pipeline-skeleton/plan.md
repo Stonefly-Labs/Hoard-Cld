@@ -89,7 +89,7 @@ src/
 │   ├── Hoard.Host.csproj      # Microsoft.NET.Sdk.Web; no project references
 │   └── Program.cs             # health checks, ListenLocalhost(8484), MapHealthChecks("/health")
 └── Hoard.Core/
-    └── Hoard.Core.csproj      # IsPackable=true, own <Version>; no source files
+    └── Hoard.Core.csproj      # IsPackable=true, <Version>0.0.1-alpha</Version>; no source files
 tests/
 ├── Hoard.Architecture.Tests/  # CoreDependencyRules (assets graph + csproj <Reference> + dll refs); fixtures; restore-based violation test; ProjectReference to Core with ReferenceOutputAssembly=false
 ├── Hoard.Host.Tests/          # /health = 200 Healthy; other paths 404 (WebApplicationFactory)
@@ -163,7 +163,8 @@ first spec that puts behavior in Core.
 - `README.md`:
   - Replace "Status: planning" with a marked `release-status` section. Working: the
     health-only host, container and executables, loopback only. Planned: the rest.
-    Alphas are available to repository collaborators only (R14).
+    Alphas are public (R14). Known limitation: `win-x64`, `linux-arm64` and the arm64
+    image are built and architecture-checked but never run in CI.
   - How to run the container and the executable, including `chmod +x` and macOS
     quarantine removal.
   - How to build and test.
@@ -189,7 +190,12 @@ first spec that puts behavior in Core.
   links it to this repo on first push. If the org restricts package creation by
   `GITHUB_TOKEN`, the first release fails at `publish`. That gets recorded as a release
   blocker and fixed in org settings, not by retagging.
-- **Visibility is open** (R14): who can download alphas is the maintainer's decision.
+- **Visibility** (R14): alphas are public. Making the repo, image and package public is
+  a manual, one-time maintainer setting; the first release cannot be pulled anonymously
+  until the image is set public after its first push.
+- **Unexecuted artifacts** (spec Clarifications): `win-x64`, `linux-arm64` and the arm64
+  image are never run in CI. Accepted for alphas; revisit before MVP
+  (a public repo makes native runners free).
 - **Re-run checksum caveat** after a mid-upload failure (R10). The remedy is a new
   version.
 

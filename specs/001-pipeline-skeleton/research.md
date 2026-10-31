@@ -323,14 +323,17 @@ alternatives considered.
   `docs/RELEASING.md` that "a PR merges only when CI is green". SC-001 (a status
   reported on every PR) is unaffected.
 
-## R14. Package and image visibility (open item for the maintainer)
+## R14. Package and image visibility (decided by the maintainer, 2026-10-31)
 
-- **Decision:** the workflow does not change visibility. The repository is private, so
-  the image, the package and the release are visible only to people with repo access.
-  The backlog outcome speaks of a "downloadable alpha" for early users. Making
-  `ghcr.io/stonefly-labs/hoard`, the package or the repo public is the maintainer's
-  call, and is raised as an open item at the end of the plan step. Until then, the
-  README release-status section and the release notes say that alphas are available
-  only to repository collaborators.
-- **Rationale:** visibility is an outward-facing product decision; neither the workflow
-  nor this plan should make it silently.
+- **Decision:** alphas are public. Before the first release tag the maintainer makes
+  the repository public and, after the first push creates them, sets the
+  `ghcr.io/stonefly-labs/hoard` image and the `Hoard.Core` package to public. The
+  workflow never changes visibility. `docs/RELEASING.md` lists these as one-time manual
+  settings, and the `release` step checks the image can be pulled anonymously.
+- **Caveat:** GitHub Packages' NuGet registry requires authentication even for public
+  packages, so `Hoard.Core` consumers need a token with `read:packages`. The docs say so;
+  the image and release assets download anonymously.
+- **Follow-up:** a public repository makes branch protection (R13) and free arm64/macOS
+  hosted runners (R6) available. Both are revisited before the MVP release, not in this
+  spec.
+- **Rationale:** the backlog outcome promises a downloadable alpha for early users.

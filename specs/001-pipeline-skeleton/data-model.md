@@ -20,7 +20,7 @@ named here so the workflows, scripts and docs use them consistently.
 | Executable × 4 | `hoard-<version>-<rid>` (`.exe` for `win-x64`); RIDs `linux-x64`, `linux-arm64`, `osx-arm64`, `win-x64` | GitHub release assets | Uploaded only if missing |
 | Checksums | `SHA256SUMS` (`sha256sum` format, one line per executable; proves integrity, not origin) | GitHub release asset | Uploaded only if missing |
 | Container image | `ghcr.io/stonefly-labs/hoard:<version>`; manifest list `linux/amd64` + `linux/arm64` | GHCR | Pushed only if the tag does not exist; `latest` never written |
-| Package | `Hoard.Core` at the `<Version>` in its project file (independent of the release version) | GitHub Packages (`nuget.pkg.github.com/stonefly-labs`) | Existing version skipped (`--skip-duplicate`) |
+| Package | `Hoard.Core` at the `<Version>` in its project file (initially `0.0.1-alpha`; independent of the release version) | GitHub Packages (`nuget.pkg.github.com/stonefly-labs`) | Existing version skipped (`--skip-duplicate`) |
 | GitHub release | Tag `v<version>`, prerelease, notes = README `release-status` section + generated PR list | GitHub Releases | Reused, never duplicated |
 
 ## Release run state
