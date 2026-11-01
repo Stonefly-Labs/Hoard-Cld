@@ -43,7 +43,7 @@ HOARD_LISTEN__PORT=abc <exe>
 echo '{ "listen": ' > hoard.json && <exe>; rm hoard.json
 <exe> --config missing.json
 <exe> --urls http://0.0.0.0:8086
-<exe> --listen:port 0 --listen:address 10.0.0.300 --data:path /proc/nope   # three problems, one report
+touch state && <exe> --listen:port 0 --listen:address 10.0.0.300 --data:path state   # three problems, one report
 ```
 
 Port in use: start one instance, then a second → exit 1 naming `127.0.0.1:8484`.
