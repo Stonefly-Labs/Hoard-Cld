@@ -1,7 +1,7 @@
 # Development workflow
 
-Today the code is a health-only host, an empty `Hoard.Core` package, their
-tests and the delivery pipeline. Technical intent is defined by the
+Today the code is a configurable host with health endpoints, an empty `Hoard.Core`
+package, their tests and the delivery pipeline. Technical intent is defined by the
 [charter](PRODUCT_CHARTER.md), [vision](PRODUCT_VISION.md),
 [product specification](PRODUCT_SPEC.md), [architecture](ARCHITECTURE.md),
 and [modular-provider ADR](adr/0001-modular-provider-architecture.md).
@@ -15,7 +15,7 @@ Prerequisites: the .NET 10 SDK (`global.json`), Docker with Buildx, bash and `ls
 ```bash
 dotnet build Hoard.slnx                 # warnings are errors
 dotnet test --solution Hoard.slnx       # architecture, host and release-script tests
-dotnet run --project src/Hoard.Host     # http://127.0.0.1:8484/health
+dotnet run --project src/Hoard.Host     # http://127.0.0.1:8484/health/ready; data in ./data
 ```
 
 `global.json` runs `dotnet test` on Microsoft.Testing.Platform, which takes the
@@ -43,11 +43,99 @@ docker buildx build -f deploy/docker/Dockerfile --platform linux/arm64 \
 eng/smoke/smoke-container.sh hoard:local
 ```
 
-Each script checks `200 Healthy` within 30 s, `404` elsewhere, and that every listener
-is on loopback, both normally and when asked for wider bindings: by environment variables
-and by a `--urls` command-line argument, and for the binary also by an `appsettings.json`
-next to it. The container script also checks the image user is not root and that a
-neighbouring container gets connection refused.
+What each script proves:
+
+- **`smoke-binary.sh`** runs the executable on port 8484. By default, under a hostile
+  framework environment (`ASPNETCORE_URLS`, `Kestrel__Endpoints__…`) and with a hostile
+  `appsettings.json` next to it, `/health/live` and `/health/ready` answer `200 Healthy`
+  within 30 s, `/health` and other paths answer `404`, and the listeners are exactly
+  `127.0.0.1:8484` (plus `[::1]:8484` where the machine has IPv6). A `--urls` argument and
+  `--listen:address 0.0.0.0` without a TLS mode are refused with exit 2 and nothing
+  listening. `--listen:address 0.0.0.0 --listen:tls:mode proxy` listens on `0.0.0.0:8484`
+  only and logs the exposure warning. TLS mode `https` with an `openssl`-generated PEM pair
+  serves HTTPS on loopback and no plain HTTP, and a certificate with the wrong key is
+  refused.
+- **`smoke-container.sh`** checks that the image user and the running process are not root.
+  It then runs the image `--read-only` with all capabilities dropped. By default and under
+  a hostile framework environment, Hoard is healthy, reachable from a neighbouring container
+  on the bridge, logs the exposure warning and listens only on `0.0.0.0:8484`. A `--urls`
+  argument is refused. `-e HOARD_LISTEN__ADDRESS=127.0.0.1` listens on loopback only and is
+  refused from the bridge. A named volume at `/data` is owned by the app user, `docker stop`
+  exits 0 in under 10 s, and the volume's content survives recreating the container. HTTPS
+  with a mounted PEM answers on the bridge with no plain HTTP. Docker's embedded DNS
+  listener (`127.0.0.11`) is the one socket the listener check ignores.
+
+The process tests in `tests/Hoard.Host.Tests/Process` cover stop signals with `SIGTERM`
+(exit 0 within 10 s). They skip it on Windows, and CI runs `dotnet test` on Linux only, so a
+clean Ctrl+C stop on Windows is not tested automatically.
+
+### Local HTTPS
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -keyout key.pem -out cert.pem -days 30 -subj /CN=localhost
+dotnet run --project src/Hoard.Host -- --listen:tls:mode https \
+  --listen:tls:certificateFile "$PWD/cert.pem" --listen:tls:keyFile "$PWD/key.pem"
+curl -k https://127.0.0.1:8484/health/ready
+```
+
+## Configuration
+
+Hoard reads its options from three sources. When an option is set in more than one, the
+command line wins over the environment, which wins over the file:
+
+1. **Command line:** `--name value` or `--name=value`. After a known option the next
+   argument is always its value, even if it starts with `-`, `--` or `/`. Positional
+   arguments, single-dash and `/` switches and repeated options are errors.
+2. **Environment:** `HOARD_*` variables. Every other variable is ignored.
+3. **File:** JSON (comments allowed, no trailing commas), from `--config <path>` or
+   `HOARD_CONFIG`, otherwise `./hoard.json` if it exists. A named file must exist; an empty
+   file or `{}` counts as no file. Files are limited to 1 MiB.
+
+Names match ignoring case. Framework settings (`ASPNETCORE_*`, `DOTNET_*`, `Kestrel__*`,
+`appsettings*.json`) are never read, and a framework argument such as `--urls` is an
+unknown option.
+
+| File key | Environment | Command line | Default | Values |
+| --- | --- | --- | --- | --- |
+| `listen.address` | `HOARD_LISTEN__ADDRESS` | `--listen:address` | `localhost` | `localhost` or an IPv4/IPv6 address written in full (`0.0.0.0`, `::`, `10.1.2.3`); no host names, brackets, scopes or IPv4-mapped forms |
+| `listen.port` | `HOARD_LISTEN__PORT` | `--listen:port` | `8484` | 1–65535 (a number or a string in the file) |
+| `listen.tls.mode` | `HOARD_LISTEN__TLS__MODE` | `--listen:tls:mode` | none | `https` or `proxy`; required for any non-loopback address |
+| `listen.tls.certificateFile` | `HOARD_LISTEN__TLS__CERTIFICATEFILE` | `--listen:tls:certificateFile` | none | PEM (certificate and key, or certificate only with `keyFile`) or PKCS#12/PFX; `https` only |
+| `listen.tls.keyFile` | `HOARD_LISTEN__TLS__KEYFILE` | `--listen:tls:keyFile` | none | PEM key for a PEM certificate |
+| `listen.tls.password` | `HOARD_LISTEN__TLS__PASSWORD` | not accepted | none | PFX password or encrypted-key password |
+| `data.path` | `HOARD_DATA__PATH` | `--data:path` | `./data` | a directory; created with mode 0700 on Unix if missing |
+| (not a file key) | `HOARD_CONFIG` | `--config` | `./hoard.json` if present | path to the config file |
+
+Relative paths resolve against the working directory. In the container image,
+`HOARD_LISTEN__ADDRESS=0.0.0.0`, `HOARD_LISTEN__TLS__MODE=proxy` and `HOARD_DATA__PATH=/data`
+are set in the environment, so only `-e HOARD_…` and command-line arguments override them; a
+mounted `hoard.json` does not. The startup summary marks a value that overrides the file
+with `overrides hoard.json`.
+
+**Exposure.** A non-loopback address needs TLS mode `https` (Hoard serves HTTPS only, from a
+certificate checked before start; an invalid, expired or key-less certificate stops startup,
+with no fallback to HTTP) or `proxy` (plain HTTP, declaring that a TLS-terminating reverse
+proxy is in front). Either mode is allowed on loopback. Non-loopback runs log a warning that
+package reads are anonymous ([ADR-0002](adr/0002-explicit-tls-posture.md)).
+
+**Secrets.** The certificate password is accepted only from `HOARD_LISTEN__TLS__PASSWORD`
+or the file; `--listen:tls:password` stops startup, because command lines are visible to
+other users. Keep a `hoard.json` that holds the password readable only by its owner (mode
+0600). In a container, `-e` values are visible to `docker inspect`. Hoard never prints the
+password or the value of an unknown option. On Windows, a PEM key is re-imported through
+PKCS#12 for TLS, and after a crash that key may remain in the user's key store.
+
+**Exit codes.** `0` after a stop signal (including one received during startup), `1` when
+the listener cannot bind (port in use, address not available) or on an unexpected failure,
+`2` for invalid configuration or a failed precondition (options, file, data directory,
+certificate), in which case nothing was opened.
+
+**Health.** `GET`/`HEAD /health/live` answers `200 Healthy` whenever the process serves
+requests. `GET`/`HEAD /health/ready` answers `200 Healthy` after startup, while a write check
+in the data directory passes (at most 2 s, concurrent probes share one check) and before
+shutdown begins; otherwise `503 Unhealthy`. Bodies carry no details. On a stop signal
+readiness turns unhealthy, new connections are refused and in-flight requests get up to
+5 seconds.
 
 Every PR gets two checks from `ci.yml`, `build-test` and `smoke`. PRs that change the
 pipeline also dry-run the release workflow ([Releasing](RELEASING.md)).

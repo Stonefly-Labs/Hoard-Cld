@@ -41,8 +41,8 @@ recreate or reference its artifacts (`hoard-speckit`/`hoard-release` skills,
 ```bash
 dotnet build Hoard.slnx                    # zero warnings (warnings are errors)
 dotnet test --solution Hoard.slnx          # all tests; MTP needs --solution
-eng/smoke/smoke-binary.sh <exe>            # published executable: health, 404, loopback only
-eng/smoke/smoke-container.sh <image>       # image: non-root, health, loopback only, refused from bridge
+eng/smoke/smoke-binary.sh <exe>            # executable: loopback by default, refuses unsafe exposure, proxy + https runs
+eng/smoke/smoke-container.sh <image>       # image: non-root, reachable on 8484 with proxy declared, no other ports
 ```
 
 PR checks: `ci.yml` (`build-test`, `smoke`); pipeline changes also dry-run
@@ -56,5 +56,6 @@ PR checks: `ci.yml` (`build-test`, `smoke`); pipeline changes also dry-run
   freshness, SSRF policy, verified atomic storage, single-flight, streaming and
   eviction safety live once in shared core services, never per slice.
 - Built-in DI and Minimal APIs; no MediatR.
-- Loopback by default; network exposure requires the admin token for
-  management. Never log secrets.
+- Loopback by default; network exposure requires a declared TLS posture
+  (`https` or `proxy`, ADR-0002) and the admin token for management. Never
+  log secrets.

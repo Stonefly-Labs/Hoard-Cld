@@ -4,4 +4,8 @@
     <AssemblyName>Hoard.Host</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hoard.Host.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -67,7 +67,7 @@ Dependency restoration repeatedly downloads the same public artifacts, wastes ba
 | Blobs | Local filesystem | Persistent disk initially; object storage later |
 | Runtime | Single executable/container | Single shared service initially |
 | UI | Same Next.js interface | Same Next.js interface |
-| Binding | Loopback by default | Explicit network exposure with authentication/TLS |
+| Binding | Loopback by default | Explicit network exposure with a declared TLS posture (native HTTPS or TLS-terminating reverse proxy) and admin-token authentication for management |
 | Read access | Anonymous | Anonymous for public registries in MVP; package tokens later |
 | Management | Local-only by default | Built-in admin token; OIDC later |
 

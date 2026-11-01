@@ -55,3 +55,8 @@ __pycache__/
 .venv/
 *.tmp
 *.oci.tar
+
+# Hoard runtime data: the default data directory when run from the repository
+/data/
+/src/Hoard.Host/data/
+/hoard.json
