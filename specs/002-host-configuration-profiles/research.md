@@ -265,7 +265,10 @@ values for unknown options closes the most likely secret-leak path (SC-007).
   200, plain `http://` must get no HTTP status (curl exit 52 or 56), and the listener set
   must be exact. This is the only place the PEM path, and the Windows key re-export, run
   on win-x64 and osx-arm64.
-- Adds a `bad-certificate` run (expired PEM): exit 2 and nothing listening.
+- Adds a `bad-certificate` run (a certificate with a mismatched key from a second `openssl req`
+  call): exit 2 and nothing listening. A back-dated (expired) certificate is not portable:
+  `-not_after` needs OpenSSL 3.4+, and the runners ship OpenSSL 3.0 (Ubuntu 24.04), LibreSSL
+  (macOS) and Git Bash's own build. Expiry is covered by the certificate loader unit tests.
 - Every run compares the full `address:port` set exactly: {127.0.0.1:8484, [::1]:8484}
   by default, {0.0.0.0:8484} when exposed. An extra listener on another port fails the
   run.
@@ -278,9 +281,10 @@ values for unknown options closes the most likely secret-leak path (SC-007).
 - Hostile command line: refused.
 - Loopback override (`-e HOARD_LISTEN__ADDRESS=127.0.0.1`): loopback-only and refused from
   the bridge, which keeps spec 001's positive-control probe useful.
-- Named-volume run: stop, recreate, and the summary says the data directory exists.
+- Named-volume run: `docker stop` finishes in under 10 s with exit code 0 and `Hoard stopped.`
+  logged, then recreate, and the summary says the data directory exists.
 - `https` run: an `openssl` self-signed PEM mounted read-only. HTTPS answers from the
-  bridge (`curl -k`); plain HTTP gets no normal response.
+  bridge (`curl -k`); plain HTTP gets no normal response; the exposure warning is logged.
 - Keeps the non-root checks and `--read-only --cap-drop ALL` inside the shared `smoke()`
   function, so every run, including the new volume and https runs, inherits them.
 - Compares the full listener `address:port` set exactly, as the binary smoke does.

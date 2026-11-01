@@ -213,6 +213,9 @@ assembly, it decides whether option validation and readiness aggregation move th
 - **Password not on the command line** (maintainer decision at the plan gate). Spec FR-008
   now refuses `--listen:tls:password`, so the password comes only from the environment or
   the file, and never appears in process listings.
+- **Windows shutdown** (known limitation). Process tests skip SIGTERM on Windows and
+  `dotnet test` runs only on Linux, so Ctrl+C shutdown on win-x64 is not automatically
+  tested; `docs/DEVELOPMENT.md` says so.
 - **`/data` ownership without `RUN`** (R10). Proven by the named-volume smoke run; the
   fallback is named.
 - **Proxy mode is a declaration.** Hoard can't verify a proxy exists (ADR-0002), and URLs

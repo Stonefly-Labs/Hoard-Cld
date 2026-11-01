@@ -386,15 +386,15 @@ signal with a request in flight; restart and compare.
   the effective value always comes from the highest-precedence source.
 - **SC-004**: The exposure warning appears in 100% of tested non-loopback runs and 0% of loopback
   runs, and 100% of tested non-loopback runs without a TLS mode are refused before opening a port.
-- **SC-008**: Every tested invalid-certificate case (FR-028) exits non-zero without opening a
-  port, and a valid certificate in `https` mode completes a TLS handshake while a plain-HTTP
-  request to the same port does not get a normal response.
 - **SC-005**: A user following the README's container instructions reaches Hoard's health
   endpoint from their machine on the first attempt, with the port published to loopback only.
 - **SC-006**: On a stop signal Hoard exits with code 0 within 10 seconds while an in-flight
   request completes, and a restart reuses the same data directory.
 - **SC-007**: No test run's captured output contains a value planted as a secret in the
   environment, on the command line or as the certificate password.
+- **SC-008**: Every tested invalid-certificate case (FR-028) exits non-zero without opening a
+  port, and a valid certificate in `https` mode completes a TLS handshake while a plain-HTTP
+  request to the same port does not get a normal response.
 
 ## Assumptions
 
