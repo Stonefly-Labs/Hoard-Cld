@@ -6,15 +6,29 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Hoard.Host/Hoard.Host.csproj" />
   </ItemGroup>
+
+  <!-- Hands the process tests the built Hoard.Host.dll, as MSBuild resolves it, so they can run
+       `dotnet <path>` with the host's own runtimeconfig.json and deps.json. -->
+  <Target Name="EmbedHostPath" BeforeTargets="GetAssemblyAttributes">
+    <MSBuild Projects="../../src/Hoard.Host/Hoard.Host.csproj" Targets="GetTargetPath">
+      <Output TaskParameter="TargetOutputs" PropertyName="_HoardHostPath" />
+    </MSBuild>
+    <ItemGroup>
+      <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+        <_Parameter1>HoardHostPath</_Parameter1>
+        <_Parameter2>$(_HoardHostPath)</_Parameter2>
+      </AssemblyAttribute>
+    </ItemGroup>
+  </Target>
 
 </Project>

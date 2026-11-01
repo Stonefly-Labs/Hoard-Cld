@@ -25,6 +25,9 @@ fallback builder is caught.
 **Verify in implement.** The empty builder still registers the console lifetime, so
 Ctrl+C and SIGTERM stop the host (R8). The spec 001 hostile-environment and
 hostile-appsettings smoke runs keep proving framework settings change nothing.
+**Verified in implement:** `ConsoleLifetime` is registered and SIGTERM stops the host with exit 0.
+The empty builder keeps in-memory and chained sources for its own host settings, but has no
+environment, command-line or file provider; the regression test asserts exactly that.
 **Fallback:** `CreateSlimBuilder(new() { Args = [] })` with `Configuration.Sources.Clear()`
 and the spec 001 Kestrel lockdown kept.
 
