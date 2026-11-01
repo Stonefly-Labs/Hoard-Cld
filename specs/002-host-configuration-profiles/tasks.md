@@ -187,7 +187,7 @@ management API and admin token (010). No option, interface or project beyond the
 - [X] T057 Search the repo for stale references to `GET /health`, "unreachable from the host" and `Mvc.Testing` outside `specs/001-*` and fix any in shipped docs or scripts
 - [X] T058 Run `dotnet build Hoard.slnx` (zero warnings), `dotnet test --solution Hoard.slnx`, `eng/smoke/smoke-binary.sh <exe>` and `eng/smoke/smoke-container.sh <image>` and record the actual results
 - [X] T059 Walk through [quickstart.md](quickstart.md) §2–§6 by hand against the local executable and image; fix any mismatch between behavior and the contracts
-- [ ] T060 Push and confirm PR #6 CI is green (`build-test`, `smoke`) and the `release.yml` dry run passes on all native runners, including the binary smoke's `https` run on win-x64 and osx-arm64 (R5 Windows PEM re-export verification)
+- [X] T060 Push and confirm PR #6 CI is green (`build-test`, `smoke`) and the `release.yml` dry run passes on all native runners, including the binary smoke's `https` run on win-x64 and osx-arm64 (R5 Windows PEM re-export verification)
 
 ---
 
