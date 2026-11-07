@@ -12,7 +12,7 @@ COPY --from=bin hoard-*-linux-arm64 /hoard
 
 FROM bin-${TARGETARCH} AS selected
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled@sha256:4309626281bfe550c0f6bb4242c435cd5cdabed1d05a5bc5843f659336f53296
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0-noble-chiseled@sha256:e9346023014b406b9bc8be969b3aa4d39efa3a43b6abcc495f01be566acb10e9
 
 LABEL org.opencontainers.image.source="https://github.com/Stonefly-Labs/Hoard-Cld" \
       org.opencontainers.image.description="Hoard, a self-hosted pull-through package cache" \
